@@ -7,3 +7,78 @@ packages:
   gitUrl: https://github.com/staillanibm
   gitUsername: staillanibm
   gitBranch: main
+- name: WmJDBCAdapter
+  wpmServer: https://packages.webmethods.io
+  wpmRegistry: licensed
+services:
+- serviceName: project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections:cdr_party
+  packages:
+  - name: FR_STT_PartyManagmentProject
+    version: "1.0"
+  - name: WmJDBCAdapter
+    version: 10.3.0.0.34
+    wpmServer: https://packages.webmethods.io
+    wpmRegistry: licensed
+- serviceName: project.fr_stt_partymanagment.integrations:createParty
+  packages:
+  - name: FR_STT_PartyManagmentProject
+    version: "1.0"
+  - name: WmJDBCAdapter
+    version: 10.3.0.0.34
+    wpmServer: https://packages.webmethods.io
+    wpmRegistry: licensed
+- serviceName: pub.utils:generateUUID
+  packages:
+  - name: WmPublic
+    version: 11.1.0.0.2097
+- serviceName: pub.date:getCurrentDateString
+  packages:
+  - name: WmPublic
+    version: 11.1.0.0.2097
+configurationVariables:
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.portNumber
+  : "5432"
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.trustStore
+  : ""
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.driverType
+  : pg
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.blockingTimeout
+  : "1000"
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.expireTimeout
+  : "1000"
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.poolable
+  : "true"
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.password
+  : "{AES}zxtjDVPnPMSWIVvNbTQB+H9awpHAyfXYCxLWEZQhnoE="
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.transactionType
+  : NO_TRANSACTION
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionEnabled
+  : "false"
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.networkProtocol
+  : ""
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.user
+  : postgres
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.minimumPoolSize
+  : "1"
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.datasourceClass
+  : org.postgresql.ds.PGSimpleDataSource
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.serverName
+  : postgres
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.heartBeatInterval
+  : "0"
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.dbType
+  : POSTGRESQL
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.startupRetryCount
+  : "0"
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.poolIncrementSize
+  : "1"
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.startupBackoffSecs
+  : "10"
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.otherProperties
+  : loginTimeout=60;
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.keyStore
+  : ""
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.databaseName
+  : sandbox
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.maximumPoolSize
+  : "10"
