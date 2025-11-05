@@ -124,7 +124,7 @@
   <value name="retry_interval">0</value>
   <record name="node_hints" javaclass="com.wm.util.Values">
     <value name="lastModifiedBy">Stephane.Tailland@ibm.com</value>
-    <value name="lastModifiedDate">1762363403625</value>
+    <value name="lastModifiedDate">1762363486097</value>
     <value name="displayName">createParty</value>
     <value name="description"></value>
     <array name="appList" type="record" depth="1">
@@ -246,6 +246,7 @@
         <number name="lineNumberForDebug" type="Long">5</number>
         <null name="outputMapSet"/>
         <value name="nodePathForDebug">1.0</value>
+        <Boolean name="xmlMapsetSupported">true</Boolean>
       </record>
     </record>
   </record>
