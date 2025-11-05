@@ -23,7 +23,7 @@
             <value name="field_largerEditor">false</value>
             <value name="field_password">false</value>
             <value name="field_usereditable">false</value>
-            <value name="id">f4802e00-ba4b-11f0-8b78-7750d569d789</value>
+            <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789</value>
           </record>
           <value name="is_public">false</value>
           <value name="field_name">party</value>
@@ -41,7 +41,7 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">f4802e00-ba4b-11f0-8b78-7750d569d789/f4802e01-ba4b-11f0-8b78-7750d569d789</value>
+                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3151-ba4c-11f0-8b78-7750d569d789</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">id</value>
@@ -59,7 +59,7 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">f4802e00-ba4b-11f0-8b78-7750d569d789/f4802e02-ba4b-11f0-8b78-7750d569d789</value>
+                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3152-ba4c-11f0-8b78-7750d569d789</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">name</value>
@@ -77,7 +77,7 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">f4802e00-ba4b-11f0-8b78-7750d569d789/f4802e03-ba4b-11f0-8b78-7750d569d789</value>
+                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3153-ba4c-11f0-8b78-7750d569d789</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">type</value>
@@ -101,7 +101,7 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">f4802e00-ba4b-11f0-8b78-7750d569d789/f4802e04-ba4b-11f0-8b78-7750d569d789</value>
+                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3154-ba4c-11f0-8b78-7750d569d789</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">isDeleted</value>
@@ -121,7 +121,7 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">f4802e00-ba4b-11f0-8b78-7750d569d789/f4802e05-ba4b-11f0-8b78-7750d569d789</value>
+                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3155-ba4c-11f0-8b78-7750d569d789</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">creationDateTime</value>
@@ -172,7 +172,7 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">f4802e00-ba4b-11f0-8b78-7750d569d789/f4802e06-ba4b-11f0-8b78-7750d569d789</value>
+                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3156-ba4c-11f0-8b78-7750d569d789</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">lastUpdateDateTime</value>
@@ -249,19 +249,61 @@
   <value name="retry_max">0</value>
   <value name="retry_interval">0</value>
   <record name="node_hints" javaclass="com.wm.util.Values">
-    <value name="createdBy">Stephane.Tailland@ibm.com</value>
-    <value name="createdDate">1762349586411</value>
-    <value name="lastModifiedDate">1762349586411</value>
+    <value name="lastModifiedBy">Stephane.Tailland@ibm.com</value>
+    <value name="lastModifiedDate">1762349950610</value>
     <value name="displayName">createParty</value>
     <value name="description"></value>
     <record name="stepNodeHints" javaclass="com.wm.util.Values">
       <record name="/0" javaclass="com.wm.util.Values">
-        <value name="itemType">ALL</value>
-        <value name="name">NEW</value>
+        <value name="itemType">CONTROLS</value>
+        <value name="name">BLOCK</value>
+        <value name="nodePathNew">0</value>
+        <number name="nodeIndex" type="Long">0</number>
+        <number name="lineNumberForDebug" type="Long">1</number>
+      </record>
+      <record name="/0/0" javaclass="com.wm.util.Values">
+        <null name="name"/>
+        <value name="itemType">SERVICES</value>
+        <record name="serviceInfo" javaclass="com.wm.util.Values">
+          <value name="groupDisplayName">Utils</value>
+          <value name="groupName">utils</value>
+          <null name="services"/>
+        </record>
+        <record name="serviceName" javaclass="com.wm.util.Values">
+          <value name="displayName">generateUUID</value>
+          <value name="serviceName">pub.utils:generateUUID</value>
+          <value name="transformerSupport">true</value>
+        </record>
+        <number name="ui_step_index" type="Long">2</number>
+        <value name="nodePathNew">0.0</value>
+        <number name="nodeIndex" type="Long">0</number>
+        <number name="lineNumberForDebug" type="Long">2</number>
+        <null name="mapSet"/>
+        <null name="outputMapSet"/>
+      </record>
+      <record name="/0/1" javaclass="com.wm.util.Values">
+        <null name="name"/>
+        <value name="itemType">SERVICES</value>
+        <record name="serviceInfo" javaclass="com.wm.util.Values">
+          <value name="groupDisplayName">Date</value>
+          <value name="groupName">date</value>
+          <null name="services"/>
+        </record>
+        <record name="serviceName" javaclass="com.wm.util.Values">
+          <value name="displayName">getCurrentDateString</value>
+          <value name="serviceName">pub.date:getCurrentDateString</value>
+          <value name="transformerSupport">true</value>
+        </record>
+        <number name="ui_step_index" type="Long">3</number>
+        <value name="nodePathNew">0.1</value>
+        <number name="nodeIndex" type="Long">1</number>
+        <number name="lineNumberForDebug" type="Long">3</number>
+        <null name="mapSet"/>
+        <null name="outputMapSet"/>
       </record>
     </record>
   </record>
-  <value name="svc_in_validator_options">none</value>
+  <value name="svc_in_validator_options">default</value>
   <value name="svc_out_validator_options">none</value>
   <value name="auditoption">2</value>
   <null name="auditfields_input"/>
