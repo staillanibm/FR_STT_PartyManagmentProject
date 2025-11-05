@@ -23,7 +23,7 @@
             <value name="field_largerEditor">false</value>
             <value name="field_password">false</value>
             <value name="field_usereditable">false</value>
-            <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789</value>
+            <value name="id">eee6a860-ba4c-11f0-8b78-7750d569d789</value>
           </record>
           <value name="is_public">false</value>
           <value name="field_name">party</value>
@@ -41,25 +41,7 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3151-ba4c-11f0-8b78-7750d569d789</value>
-              </record>
-              <value name="is_public">false</value>
-              <value name="field_name">id</value>
-              <value name="field_type">string</value>
-              <value name="field_dim">0</value>
-              <value name="nillable">false</value>
-              <value name="form_qualified">false</value>
-              <value name="is_global">false</value>
-            </record>
-            <record javaclass="com.wm.util.Values">
-              <value name="node_type">field</value>
-              <value name="node_subtype">unknown</value>
-              <value name="node_comment"></value>
-              <record name="node_hints" javaclass="com.wm.util.Values">
-                <value name="field_largerEditor">false</value>
-                <value name="field_password">false</value>
-                <value name="field_usereditable">false</value>
-                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3152-ba4c-11f0-8b78-7750d569d789</value>
+                <value name="id">eee6a860-ba4c-11f0-8b78-7750d569d789/eee6a861-ba4c-11f0-8b78-7750d569d789</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">name</value>
@@ -77,7 +59,7 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3153-ba4c-11f0-8b78-7750d569d789</value>
+                <value name="id">eee6a860-ba4c-11f0-8b78-7750d569d789/eee6a862-ba4c-11f0-8b78-7750d569d789</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">type</value>
@@ -101,7 +83,7 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3154-ba4c-11f0-8b78-7750d569d789</value>
+                <value name="id">eee6a860-ba4c-11f0-8b78-7750d569d789/eee6a863-ba4c-11f0-8b78-7750d569d789</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">isDeleted</value>
@@ -109,109 +91,6 @@
               <value name="field_dim">0</value>
               <value name="field_opt">true</value>
               <value name="wrapper_type">java.lang.Boolean</value>
-              <value name="nillable">false</value>
-              <value name="form_qualified">false</value>
-              <value name="is_global">false</value>
-            </record>
-            <record javaclass="com.wm.util.Values">
-              <value name="node_type">field</value>
-              <value name="node_subtype">unknown</value>
-              <value name="node_comment"></value>
-              <record name="node_hints" javaclass="com.wm.util.Values">
-                <value name="field_largerEditor">false</value>
-                <value name="field_password">false</value>
-                <value name="field_usereditable">false</value>
-                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3155-ba4c-11f0-8b78-7750d569d789</value>
-              </record>
-              <value name="is_public">false</value>
-              <value name="field_name">creationDateTime</value>
-              <value name="field_type">string</value>
-              <value name="field_dim">0</value>
-              <record name="field_content_type" javaclass="com.wm.util.Values">
-                <value name="contentType">1</value>
-                <value name="internalType">instance</value>
-                <value name="ct_class">com.wm.lang.schema.datatypev2.gcType.WmDateTime</value>
-                <value name="name">dateTime_customized</value>
-                <array name="parent-ancestors" type="record" depth="1">
-                  <record javaclass="com.wm.util.Values">
-                    <value name="xmlns">http://www.w3.org/2001/XMLSchema</value>
-                    <value name="ncName">anySimpleType</value>
-                  </record>
-                  <record javaclass="com.wm.util.Values">
-                    <value name="xmlns">http://www.w3.org/2001/XMLSchema</value>
-                    <value name="ncName">anyType</value>
-                  </record>
-                  <record javaclass="com.wm.util.Values">
-                    <value name="xmlns">http://www.w3.org/2001/XMLSchema</value>
-                    <value name="ncName">dateTime</value>
-                  </record>
-                </array>
-                <record name="baseType" javaclass="com.wm.util.Values">
-                  <record name="whiteSpace" javaclass="com.wm.util.Values">
-                    <record name="FacetWSCValue" javaclass="com.wm.util.Values">
-                      <value name="cDecimalValue">1</value>
-                    </record>
-                    <value name="facetFixed">true</value>
-                  </record>
-                  <value name="contentType">1</value>
-                  <value name="internalType">instance</value>
-                  <value name="ct_class">com.wm.lang.schema.datatypev2.gcType.WmDateTime</value>
-                  <value name="dataTypeVersion">dtVersion2</value>
-                </record>
-                <value name="dataTypeVersion">dtVersion2</value>
-              </record>
-              <value name="nillable">false</value>
-              <value name="form_qualified">false</value>
-              <value name="is_global">false</value>
-            </record>
-            <record javaclass="com.wm.util.Values">
-              <value name="node_type">field</value>
-              <value name="node_subtype">unknown</value>
-              <value name="node_comment"></value>
-              <record name="node_hints" javaclass="com.wm.util.Values">
-                <value name="field_largerEditor">false</value>
-                <value name="field_password">false</value>
-                <value name="field_usereditable">false</value>
-                <value name="id">19bc3150-ba4c-11f0-8b78-7750d569d789/19bc3156-ba4c-11f0-8b78-7750d569d789</value>
-              </record>
-              <value name="is_public">false</value>
-              <value name="field_name">lastUpdateDateTime</value>
-              <value name="field_type">string</value>
-              <value name="field_dim">0</value>
-              <value name="field_opt">true</value>
-              <record name="field_content_type" javaclass="com.wm.util.Values">
-                <value name="contentType">1</value>
-                <value name="internalType">instance</value>
-                <value name="ct_class">com.wm.lang.schema.datatypev2.gcType.WmDateTime</value>
-                <value name="name">dateTime_customized</value>
-                <array name="parent-ancestors" type="record" depth="1">
-                  <record javaclass="com.wm.util.Values">
-                    <value name="xmlns">http://www.w3.org/2001/XMLSchema</value>
-                    <value name="ncName">anySimpleType</value>
-                  </record>
-                  <record javaclass="com.wm.util.Values">
-                    <value name="xmlns">http://www.w3.org/2001/XMLSchema</value>
-                    <value name="ncName">anyType</value>
-                  </record>
-                  <record javaclass="com.wm.util.Values">
-                    <value name="xmlns">http://www.w3.org/2001/XMLSchema</value>
-                    <value name="ncName">dateTime</value>
-                  </record>
-                </array>
-                <record name="baseType" javaclass="com.wm.util.Values">
-                  <record name="whiteSpace" javaclass="com.wm.util.Values">
-                    <record name="FacetWSCValue" javaclass="com.wm.util.Values">
-                      <value name="cDecimalValue">1</value>
-                    </record>
-                    <value name="facetFixed">true</value>
-                  </record>
-                  <value name="contentType">1</value>
-                  <value name="internalType">instance</value>
-                  <value name="ct_class">com.wm.lang.schema.datatypev2.gcType.WmDateTime</value>
-                  <value name="dataTypeVersion">dtVersion2</value>
-                </record>
-                <value name="dataTypeVersion">dtVersion2</value>
-              </record>
               <value name="nillable">false</value>
               <value name="form_qualified">false</value>
               <value name="is_global">false</value>
@@ -250,7 +129,7 @@
   <value name="retry_interval">0</value>
   <record name="node_hints" javaclass="com.wm.util.Values">
     <value name="lastModifiedBy">Stephane.Tailland@ibm.com</value>
-    <value name="lastModifiedDate">1762349950610</value>
+    <value name="lastModifiedDate">1762350008513</value>
     <value name="displayName">createParty</value>
     <value name="description"></value>
     <record name="stepNodeHints" javaclass="com.wm.util.Values">
