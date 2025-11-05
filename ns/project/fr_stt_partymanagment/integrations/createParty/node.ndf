@@ -23,7 +23,7 @@
             <value name="field_largerEditor">false</value>
             <value name="field_password">false</value>
             <value name="field_usereditable">false</value>
-            <value name="id">eee6a860-ba4c-11f0-8b78-7750d569d789</value>
+            <value name="id">84621170-ba68-11f0-a912-63b3ee9be89c</value>
           </record>
           <value name="is_public">false</value>
           <value name="field_name">party</value>
@@ -41,7 +41,7 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">eee6a860-ba4c-11f0-8b78-7750d569d789/eee6a861-ba4c-11f0-8b78-7750d569d789</value>
+                <value name="id">84621170-ba68-11f0-a912-63b3ee9be89c/84621171-ba68-11f0-a912-63b3ee9be89c</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">name</value>
@@ -59,17 +59,13 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">eee6a860-ba4c-11f0-8b78-7750d569d789/eee6a862-ba4c-11f0-8b78-7750d569d789</value>
+                <value name="id">84621170-ba68-11f0-a912-63b3ee9be89c/84621172-ba68-11f0-a912-63b3ee9be89c</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">type</value>
               <value name="field_type">string</value>
               <value name="field_dim">0</value>
-              <array name="field_options" type="value" depth="1">
-                <value></value>
-                <value>public</value>
-                <value>private</value>
-                <value>individual</value>
+              <array name="field_options" type="record" depth="1">
               </array>
               <value name="nillable">false</value>
               <value name="form_qualified">false</value>
@@ -83,14 +79,13 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">eee6a860-ba4c-11f0-8b78-7750d569d789/eee6a863-ba4c-11f0-8b78-7750d569d789</value>
+                <value name="id">84621170-ba68-11f0-a912-63b3ee9be89c/84621173-ba68-11f0-a912-63b3ee9be89c</value>
               </record>
               <value name="is_public">false</value>
               <value name="field_name">isDeleted</value>
-              <value name="field_type">object</value>
+              <value name="field_type">string</value>
               <value name="field_dim">0</value>
               <value name="field_opt">true</value>
-              <value name="wrapper_type">java.lang.Boolean</value>
               <value name="nillable">false</value>
               <value name="form_qualified">false</value>
               <value name="is_global">false</value>
@@ -129,7 +124,7 @@
   <value name="retry_interval">0</value>
   <record name="node_hints" javaclass="com.wm.util.Values">
     <value name="lastModifiedBy">Stephane.Tailland@ibm.com</value>
-    <value name="lastModifiedDate">1762361497472</value>
+    <value name="lastModifiedDate">1762361872691</value>
     <value name="displayName">createParty</value>
     <value name="description"></value>
     <array name="appList" type="record" depth="1">
@@ -194,10 +189,10 @@
       <record name="/1" javaclass="com.wm.util.Values">
         <value name="itemType">CONTROLS</value>
         <value name="name">BLOCK</value>
-        <value name="nodePathForDebug">1</value>
         <value name="nodePathNew">1</value>
         <number name="nodeIndex" type="Long">1</number>
         <number name="lineNumberForDebug" type="Long">4</number>
+        <value name="nodePathForDebug">1</value>
       </record>
       <record name="/1/0" javaclass="com.wm.util.Values">
         <value name="itemType">APPS</value>
@@ -250,6 +245,7 @@
         <number name="nodeIndex" type="Long">0</number>
         <number name="lineNumberForDebug" type="Long">5</number>
         <null name="outputMapSet"/>
+        <value name="nodePathForDebug">1.0</value>
       </record>
     </record>
   </record>
