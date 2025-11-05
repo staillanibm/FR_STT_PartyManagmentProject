@@ -13,7 +13,7 @@
         <number name="createdDate" type="Long">1762362908949</number>
         <value name="lastModifiedBy">Stephane.Tailland@ibm.com</value>
         <value name="lastModifiedByUserId">df61f994af4043b6bc7046c3e6bbfebd</value>
-        <number name="lastModifiedDate" type="Long">1762363812153</number>
+        <number name="lastModifiedDate" type="Long">1762364168709</number>
       </record>
       <Boolean name="wMIODocTypeReplica">true</Boolean>
     </record>
@@ -89,6 +89,11 @@
         <value name="field_name">status</value>
         <value name="field_type">string</value>
         <value name="field_dim">0</value>
+        <array name="field_options" type="value" depth="1">
+          <value></value>
+          <value>inactive</value>
+          <value>active</value>
+        </array>
         <value name="nillable">false</value>
         <value name="form_qualified">false</value>
         <value name="is_global">false</value>
