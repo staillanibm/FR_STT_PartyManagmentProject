@@ -129,7 +129,7 @@
   <value name="retry_interval">0</value>
   <record name="node_hints" javaclass="com.wm.util.Values">
     <value name="lastModifiedBy">Stephane.Tailland@ibm.com</value>
-    <value name="lastModifiedDate">1762350008513</value>
+    <value name="lastModifiedDate">1762350200218</value>
     <value name="displayName">createParty</value>
     <value name="description"></value>
     <record name="stepNodeHints" javaclass="com.wm.util.Values">
@@ -179,6 +179,14 @@
         <number name="lineNumberForDebug" type="Long">3</number>
         <null name="mapSet"/>
         <null name="outputMapSet"/>
+      </record>
+      <record name="/1" javaclass="com.wm.util.Values">
+        <value name="itemType">CONTROLS</value>
+        <value name="name">BLOCK</value>
+      </record>
+      <record name="/1/0" javaclass="com.wm.util.Values">
+        <value name="itemType">ALL</value>
+        <value name="name">NEW</value>
       </record>
     </record>
   </record>
