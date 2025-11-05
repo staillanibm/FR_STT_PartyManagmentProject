@@ -1,0 +1,9 @@
+version: "1.0"
+info:
+  model: int-scaffold
+packages:
+- name: FR_STT_PartyManagmentProject
+  gitServerName: staillanibm
+  gitUrl: https://github.com/staillanibm
+  gitUsername: staillanibm
+  gitBranch: main
