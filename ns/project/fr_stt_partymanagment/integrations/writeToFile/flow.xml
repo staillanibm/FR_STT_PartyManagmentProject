@@ -5,7 +5,7 @@
 
   <!-- nodes -->
 
-<INVOKE NAME="JSON" SERVICE="pub.json:documentToJSONString">
+<INVOKE NAME="JSON" SERVICE="pub.json:documentToJSONString" DISABLED="true">
   <COMMENT></COMMENT>
 
   <!-- nodes -->
@@ -374,7 +374,7 @@
 </MAP>
 </INVOKE>
 
-<INVOKE NAME="Flow" SERVICE="pub.flow:debugLog">
+<INVOKE NAME="Flow" SERVICE="pub.flow:debugLog" DISABLED="true">
   <COMMENT></COMMENT>
 
   <!-- nodes -->
@@ -481,7 +481,7 @@
         <value name="modifiable">true</value>
       </record>
       <record javaclass="com.wm.util.Values">
-        <value name="node_type">field</value>
+        <value name="node_type">unknown</value>
         <value name="node_subtype">unknown</value>
         <value name="is_public">false</value>
         <value name="field_name">jsonString</value>
@@ -541,7 +541,7 @@
         <value name="modifiable">true</value>
       </record>
       <record javaclass="com.wm.util.Values">
-        <value name="node_type">field</value>
+        <value name="node_type">unknown</value>
         <value name="node_subtype">unknown</value>
         <value name="is_public">false</value>
         <value name="field_name">jsonString</value>
