@@ -11,17 +11,18 @@
   <record name="requires" javaclass="com.wm.util.Values">
     <value name="WmJDBCAdapter">10.3.0.0.34</value>
     <value name="JcPublicTools">5.0</value>
+    <value name="cdfKafka">1.0</value>
   </record>
   <null name="listACL"/>
   <value name="webappLoad">yes</value>
   <value name="reloadWithDependentPackage">yes</value>
-  <value name="build">51</value>
+  <value name="build">52</value>
   <null name="description"/>
   <value name="created_date">05-11-2025 13:15:51 GMT</value>
   <null name="extendedProperties"/>
   <null name="target_server_version"/>
   <value name="isProjectPackage">true</value>
-  <value name="lastUpdated">2025-11-06T10:46:20.669358594Z</value>
+  <value name="lastUpdated">2025-11-06T10:49:00.756316058Z</value>
   <value name="wmProjectId">flce147696295ec8a146c516</value>
   <value name="creator">Stephane Tailland</value>
 </Values>
