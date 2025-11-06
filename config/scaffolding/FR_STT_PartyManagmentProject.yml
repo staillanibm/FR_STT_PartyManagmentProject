@@ -12,8 +12,13 @@ packages:
   wpmServer: https://packages.webmethods.io
   wpmRegistry: licensed
 - name: cdfKafka
+  version: "1.0"
   gitServerName: staillanibm
   gitUrl: https://github.com/staillanibm
+  gitUsername: staillanibm
+- name: JcPublicTools
+  gitServerName: staillanibm
+  gitUrl: https://github.com/johnpcarter
   gitUsername: staillanibm
 services:
 - serviceName: project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections:cdr_party
@@ -22,6 +27,8 @@ services:
     version: "1.0"
   - name: cdfKafka
     version: "1.0"
+  - name: JcPublicTools
+    version: "5.0"
   - name: WmJDBCAdapter
     version: 10.3.0.0.34
     wpmServer: https://packages.webmethods.io
@@ -32,6 +39,8 @@ services:
     version: "1.0"
   - name: cdfKafka
     version: "1.0"
+  - name: JcPublicTools
+    version: "5.0"
   - name: WmJDBCAdapter
     version: 10.3.0.0.34
     wpmServer: https://packages.webmethods.io
@@ -42,6 +51,8 @@ services:
     version: "1.0"
   - name: cdfKafka
     version: "1.0"
+  - name: JcPublicTools
+    version: "5.0"
   - name: WmJDBCAdapter
     version: 10.3.0.0.34
     wpmServer: https://packages.webmethods.io
@@ -54,6 +65,18 @@ services:
   packages:
   - name: WmPublic
     version: 11.1.0.0.2097
+- serviceName: project.fr_stt_partymanagment.integrations:writeToFile
+  packages:
+  - name: FR_STT_PartyManagmentProject
+    version: "1.0"
+  - name: cdfKafka
+    version: "1.0"
+  - name: JcPublicTools
+    version: "5.0"
+  - name: WmJDBCAdapter
+    version: 10.3.0.0.34
+    wpmServer: https://packages.webmethods.io
+    wpmRegistry: licensed
 configurationVariables:
   ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.portNumber
   : "5432"
