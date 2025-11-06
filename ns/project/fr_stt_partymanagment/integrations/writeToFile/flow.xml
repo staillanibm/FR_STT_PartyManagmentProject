@@ -32,7 +32,7 @@
           <value name="field_largerEditor">false</value>
           <value name="field_password">false</value>
           <value name="field_usereditable">false</value>
-          <value name="id">f4648710-baf8-11f0-9836-7dca45c85ec9</value>
+          <value name="id">83815250-bb00-11f0-b572-d7284f360267</value>
         </record>
         <value name="is_public">false</value>
         <value name="field_name">events</value>
@@ -86,7 +86,7 @@
   <DATA ENCODING="XMLValues" I18N="true">
 
 <Values version="2.0">
-  <value name="xml">%events/eventType%;%events/eventDateTime%;%events/event/id%;%events/event/name%;%events/event/type%;%events/event/status%;%events/event/creationDateTime%;%events/event/updateDateTime%</value>
+  <value name="xml">%events/value/eventType%;%events/value/eventDateTime%;%events/value/event/id%;%events/value/event/name%;%events/value/event/type%;%events/value/event/status%;%events/value/event/creationDateTime%;%events/value/event/updateDateTime%</value>
 </Values>
 </DATA>
 </MAPSET>
@@ -270,7 +270,7 @@
           <value name="field_largerEditor">false</value>
           <value name="field_password">false</value>
           <value name="field_usereditable">false</value>
-          <value name="id">f4648710-baf8-11f0-9836-7dca45c85ec9</value>
+          <value name="id">83815250-bb00-11f0-b572-d7284f360267</value>
         </record>
         <value name="is_public">false</value>
         <value name="field_name">events</value>
@@ -450,7 +450,7 @@
           <value name="field_largerEditor">false</value>
           <value name="field_password">false</value>
           <value name="field_usereditable">false</value>
-          <value name="id">f4648710-baf8-11f0-9836-7dca45c85ec9</value>
+          <value name="id">83815250-bb00-11f0-b572-d7284f360267</value>
         </record>
         <value name="is_public">false</value>
         <value name="field_name">events</value>
@@ -469,10 +469,10 @@
               <value name="field_largerEditor">false</value>
               <value name="field_password">false</value>
               <value name="field_usereditable">false</value>
-              <value name="id">f4648710-baf8-11f0-9836-7dca45c85ec9/f4648711-baf8-11f0-9836-7dca45c85ec9</value>
+              <value name="id">83815250-bb00-11f0-b572-d7284f360267/83815251-bb00-11f0-b572-d7284f360267</value>
             </record>
             <value name="is_public">false</value>
-            <value name="field_name">eventType</value>
+            <value name="field_name">topic</value>
             <value name="field_type">string</value>
             <value name="field_dim">0</value>
             <value name="nillable">true</value>
@@ -487,10 +487,10 @@
               <value name="field_largerEditor">false</value>
               <value name="field_password">false</value>
               <value name="field_usereditable">false</value>
-              <value name="id">f4648710-baf8-11f0-9836-7dca45c85ec9/f4648712-baf8-11f0-9836-7dca45c85ec9</value>
+              <value name="id">83815250-bb00-11f0-b572-d7284f360267/83815252-bb00-11f0-b572-d7284f360267</value>
             </record>
             <value name="is_public">false</value>
-            <value name="field_name">eventDateTime</value>
+            <value name="field_name">key</value>
             <value name="field_type">string</value>
             <value name="field_dim">0</value>
             <value name="nillable">true</value>
@@ -505,17 +505,18 @@
               <value name="field_largerEditor">false</value>
               <value name="field_password">false</value>
               <value name="field_usereditable">false</value>
-              <value name="id">f4648710-baf8-11f0-9836-7dca45c85ec9/f4648713-baf8-11f0-9836-7dca45c85ec9</value>
+              <value name="id">83815250-bb00-11f0-b572-d7284f360267/83815253-bb00-11f0-b572-d7284f360267</value>
             </record>
             <value name="is_public">false</value>
-            <value name="field_name">event</value>
-            <value name="field_type">recref</value>
+            <value name="field_name">value</value>
+            <value name="field_type">record</value>
             <value name="field_dim">0</value>
             <value name="nillable">true</value>
             <value name="form_qualified">false</value>
             <value name="is_global">false</value>
+            <array name="rec_fields" type="record" depth="1">
+            </array>
             <value name="modifiable">true</value>
-            <value name="rec_ref">project.fr_stt_partymanagment.documenttypes:Party</value>
           </record>
         </array>
         <value name="modifiable">true</value>

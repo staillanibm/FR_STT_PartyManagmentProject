@@ -23,7 +23,7 @@
             <value name="field_largerEditor">false</value>
             <value name="field_password">false</value>
             <value name="field_usereditable">false</value>
-            <value name="id">f4648710-baf8-11f0-9836-7dca45c85ec9</value>
+            <value name="id">83815250-bb00-11f0-b572-d7284f360267</value>
           </record>
           <value name="is_public">false</value>
           <value name="field_name">events</value>
@@ -42,10 +42,10 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">f4648710-baf8-11f0-9836-7dca45c85ec9/f4648711-baf8-11f0-9836-7dca45c85ec9</value>
+                <value name="id">83815250-bb00-11f0-b572-d7284f360267/83815251-bb00-11f0-b572-d7284f360267</value>
               </record>
               <value name="is_public">false</value>
-              <value name="field_name">eventType</value>
+              <value name="field_name">topic</value>
               <value name="field_type">string</value>
               <value name="field_dim">0</value>
               <value name="nillable">true</value>
@@ -60,10 +60,10 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">f4648710-baf8-11f0-9836-7dca45c85ec9/f4648712-baf8-11f0-9836-7dca45c85ec9</value>
+                <value name="id">83815250-bb00-11f0-b572-d7284f360267/83815252-bb00-11f0-b572-d7284f360267</value>
               </record>
               <value name="is_public">false</value>
-              <value name="field_name">eventDateTime</value>
+              <value name="field_name">key</value>
               <value name="field_type">string</value>
               <value name="field_dim">0</value>
               <value name="nillable">true</value>
@@ -78,17 +78,74 @@
                 <value name="field_largerEditor">false</value>
                 <value name="field_password">false</value>
                 <value name="field_usereditable">false</value>
-                <value name="id">f4648710-baf8-11f0-9836-7dca45c85ec9/f4648713-baf8-11f0-9836-7dca45c85ec9</value>
+                <value name="id">83815250-bb00-11f0-b572-d7284f360267/83815253-bb00-11f0-b572-d7284f360267</value>
               </record>
               <value name="is_public">false</value>
-              <value name="field_name">event</value>
-              <value name="field_type">recref</value>
+              <value name="field_name">value</value>
+              <value name="field_type">record</value>
               <value name="field_dim">0</value>
               <value name="nillable">true</value>
               <value name="form_qualified">false</value>
               <value name="is_global">false</value>
+              <array name="rec_fields" type="record" depth="1">
+                <record javaclass="com.wm.util.Values">
+                  <value name="node_type">field</value>
+                  <value name="node_subtype">unknown</value>
+                  <value name="node_comment"></value>
+                  <record name="node_hints" javaclass="com.wm.util.Values">
+                    <value name="field_largerEditor">false</value>
+                    <value name="field_password">false</value>
+                    <value name="field_usereditable">false</value>
+                    <value name="id">83815250-bb00-11f0-b572-d7284f360267/83815253-bb00-11f0-b572-d7284f360267/83817960-bb00-11f0-b572-d7284f360267</value>
+                  </record>
+                  <value name="is_public">false</value>
+                  <value name="field_name">eventType</value>
+                  <value name="field_type">string</value>
+                  <value name="field_dim">0</value>
+                  <value name="nillable">true</value>
+                  <value name="form_qualified">false</value>
+                  <value name="is_global">false</value>
+                </record>
+                <record javaclass="com.wm.util.Values">
+                  <value name="node_type">field</value>
+                  <value name="node_subtype">unknown</value>
+                  <value name="node_comment"></value>
+                  <record name="node_hints" javaclass="com.wm.util.Values">
+                    <value name="field_largerEditor">false</value>
+                    <value name="field_password">false</value>
+                    <value name="field_usereditable">false</value>
+                    <value name="id">83815250-bb00-11f0-b572-d7284f360267/83815253-bb00-11f0-b572-d7284f360267/83817961-bb00-11f0-b572-d7284f360267</value>
+                  </record>
+                  <value name="is_public">false</value>
+                  <value name="field_name">eventDateTime</value>
+                  <value name="field_type">string</value>
+                  <value name="field_dim">0</value>
+                  <value name="nillable">true</value>
+                  <value name="form_qualified">false</value>
+                  <value name="is_global">false</value>
+                </record>
+                <record javaclass="com.wm.util.Values">
+                  <value name="node_type">field</value>
+                  <value name="node_subtype">unknown</value>
+                  <value name="node_comment"></value>
+                  <record name="node_hints" javaclass="com.wm.util.Values">
+                    <value name="field_largerEditor">false</value>
+                    <value name="field_password">false</value>
+                    <value name="field_usereditable">false</value>
+                    <value name="id">83815250-bb00-11f0-b572-d7284f360267/83815253-bb00-11f0-b572-d7284f360267/83817962-bb00-11f0-b572-d7284f360267</value>
+                  </record>
+                  <value name="is_public">false</value>
+                  <value name="field_name">event</value>
+                  <value name="field_type">recref</value>
+                  <value name="field_dim">0</value>
+                  <value name="nillable">true</value>
+                  <value name="form_qualified">false</value>
+                  <value name="is_global">false</value>
+                  <value name="modifiable">true</value>
+                  <value name="rec_ref">project.fr_stt_partymanagment.documenttypes:Party</value>
+                </record>
+              </array>
               <value name="modifiable">true</value>
-              <value name="rec_ref">project.fr_stt_partymanagment.documenttypes:Party</value>
             </record>
           </array>
           <value name="modifiable">true</value>
@@ -124,7 +181,7 @@
   <value name="retry_interval">0</value>
   <record name="node_hints" javaclass="com.wm.util.Values">
     <value name="lastModifiedBy">Stephane.Tailland@ibm.com</value>
-    <value name="lastModifiedDate">1762424277297</value>
+    <value name="lastModifiedDate">1762427249795</value>
     <value name="displayName">writeToFile</value>
     <value name="description"></value>
     <record name="stepNodeHints" javaclass="com.wm.util.Values">
@@ -142,6 +199,7 @@
         <value name="nodePathNew">0</value>
         <number name="nodeIndex" type="Long">0</number>
         <number name="lineNumberForDebug" type="Long">1</number>
+        <value name="nodePathForDebug">0</value>
       </record>
       <record name="/0/0" javaclass="com.wm.util.Values">
         <value name="itemType">CONTROLS</value>
@@ -160,6 +218,7 @@
         </array>
         <array name="lookupTransformer" type="object" depth="1" javaclass="java.lang.Object">
         </array>
+        <value name="nodePathForDebug">0.0</value>
       </record>
       <null name="/0/0/0"/>
       <record name="/0/1" javaclass="com.wm.util.Values">
@@ -182,6 +241,8 @@
         <value name="nodePathNew">0.1</value>
         <number name="nodeIndex" type="Long">1</number>
         <number name="lineNumberForDebug" type="Long">3</number>
+        <Boolean name="serviceReferenceResolved">true</Boolean>
+        <value name="nodePathForDebug">0.1</value>
       </record>
       <record name="/1" javaclass="com.wm.util.Values">
         <value name="itemType">CONTROLS</value>
@@ -200,6 +261,7 @@
         </array>
         <array name="lookupTransformer" type="object" depth="1" javaclass="java.lang.Object">
         </array>
+        <value name="nodePathForDebug">1</value>
       </record>
       <record name="/1/0" javaclass="com.wm.util.Values">
       </record>
