@@ -191,12 +191,12 @@ pipeline {
                         fi
                         echo "✓ kubectl is accessible"
 
-                        # Check OCP namespace exists
-                        if ! /tools/kubectl get namespace ${OCP_NAMESPACE} > /dev/null 2>&1; then
-                            echo "ERROR: OCP namespace ${OCP_NAMESPACE} not found"
+                        # Verify kubectl can access the API by listing buildconfigs
+                        if ! /tools/kubectl get buildconfigs -n ${OCP_NAMESPACE} > /dev/null 2>&1; then
+                            echo "ERROR: Cannot access OCP namespace ${OCP_NAMESPACE}"
                             exit 1
                         fi
-                        echo "✓ OCP namespace ${OCP_NAMESPACE} exists"
+                        echo "✓ OCP namespace ${OCP_NAMESPACE} accessible"
                     '''
                 }
             }
