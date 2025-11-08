@@ -1,0 +1,194 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cdf-party-management
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cdf-party-management
+data:
+  application.properties: |
+    settings.watt.server.ns.lockingMode=none
+
+    truststore.KAFKA_TRUSTSTORE.ksDescription=Kafka truststore
+    truststore.KAFKA_TRUSTSTORE.ksLocation=/certs/kafka.truststore.jks
+    truststore.KAFKA_TRUSTSTORE.ksPassword=$secret{KAFKA_TRUSTSTORE_PASSWORD}
+    truststore.KAFKA_TRUSTSTORE.ksStoreProviderName=SUN
+    truststore.KAFKA_TRUSTSTORE.ksType=JKS
+
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionEnabled=true
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.serverList=kafka-sasl-ssl:9092
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.securityProtocol=SASL_SSL
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.clientID=party_ert_ocp
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.groupId=party_ert_ocp
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.jaasConfig=$secret{KAFKA_JAAS_CONFIG_CONSUMER}
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.keyDeserializer=org.apache.kafka.common.serialization.StringDeserializer
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.valueDeserializer=com.wm.adapter.wmkafka.idata.IDataDeserializer
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.autoOffsetReset=earliest
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.enableAutoCommit=false
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.autoCommitInterval=
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.trustStoreAlias=KAFKA_TRUSTSTORE
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_consumer.connectionSettings.otherProperties=sasl.mechanism=PLAIN
+
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_producer.connectionEnabled=true
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_producer.connectionSettings.serverList=kafka-sasl-ssl:9092
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_producer.connectionSettings.securityProtocol=SASL_SSL
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_producer.connectionSettings.clientID=party_ert_ocp
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_producer.connectionSettings.jaasConfig=$secret{KAFKA_JAAS_CONFIG_PRODUCER}
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_producer.connectionSettings.keySerializerClass=org.apache.kafka.common.serialization.StringSerializer
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_producer.connectionSettings.valueSerializerClass=com.wm.adapter.wmkafka.idata.IDataSerializer
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_producer.connectionSettings.trustStoreAlias=KAFKA_TRUSTSTORE
+    artConnection.cdfKafka.cdfKafka.connections.kafka_cdf_producer.connectionSettings.otherProperties=sasl.mechanism=PLAIN
+
+    artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionEnabled=true
+    artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.databaseName=postgres
+    artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.user=$secret{DB_USERNAME}
+    artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.password=$secret{DB_PASSWORD}
+    artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.serverName=postgres-service
+    artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.portNumber=5432
+
+    user.Administrator.password=$secret{ADMIN_PASSWORD}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdf-party-management
+  labels:
+    app.kubernetes.io/instance: cdf-party-management
+    app.kubernetes.io/name: microservicesruntime
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: cdf-party-management
+      app.kubernetes.io/name: microservicesruntime
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: cdf-party-management
+        app.kubernetes.io/name: microservicesruntime
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: /metrics
+        prometheus.io/port: '5555'
+        prometheus.io/scheme: http
+    spec:
+      serviceAccountName: cdf-party-management
+      restartPolicy: Always
+      securityContext: {}  
+      containers:
+        - name: cdf-party-management
+          image: default-route-openshift-image-registry.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com/zone-france/cdf-party-management:1.0.3
+          imagePullPolicy: Always
+          ports:
+            - name: https
+              containerPort: 5543
+              protocol: TCP
+            - name: http
+              containerPort: 5555
+              protocol: TCP
+            - name: diag
+              containerPort: 9999
+              protocol: TCP
+          volumeMounts:
+            - name: application-properties
+              mountPath: /opt/softwareag/IntegrationServer/application.properties
+              subPath:   application.properties
+              readOnly:  true
+            - name: cdf-party-management-secret
+              mountPath: /etc/secrets
+            - name: certificates
+              mountPath: /certs/kafka.truststore.jks
+              subPath: kafka.truststore.jks
+              readOnly: true
+          env:
+            - name: SAG_IS_CLOUD_REGISTER_URL
+              valueFrom:
+                secretKeyRef:
+                  key: SAG_IS_CLOUD_REGISTER_URL
+                  name: cdf-party-management-secret
+            - name: SAG_IS_EDGE_CLOUD_ALIAS
+              valueFrom:
+                secretKeyRef:
+                  key: SAG_IS_EDGE_CLOUD_ALIAS
+                  name: cdf-party-management-secret
+            - name: SAG_IS_CLOUD_REGISTER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: SAG_IS_CLOUD_REGISTER_TOKEN
+                  name: cdf-party-management-secret
+          livenessProbe:
+            tcpSocket:
+              port: http
+            timeoutSeconds: 2
+            periodSeconds: 15
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 15
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            timeoutSeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 32
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2000Mi
+      volumes:
+        - name: cdf-party-management-secret
+          secret:
+            secretName: cdf-party-management-secret
+        - name: application-properties
+          configMap:
+            name: cdf-party-management
+            items:
+            - key: application.properties
+              path: application.properties
+        - name: certificates
+          secret:
+            secretName: cdf-party-management-certificates
+            items:
+            - key: kafka.truststore.jks
+              path: kafka.truststore.jks
+              mode: 0400
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cdf-party-management
+  labels:
+    app.kubernetes.io/instance: cdf-party-management
+    app.kubernetes.io/name: microservicesruntime
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 5555
+      targetPort: 5555
+      protocol: TCP
+    - name: https
+      port: 5543
+      targetPort: 5543
+      protocol: TCP
+    - name: diag
+      port: 9999
+      targetPort: 9999
+      protocol: TCP
+  selector:
+    app.kubernetes.io/instance: cdf-party-management
+    app.kubernetes.io/name: microservicesruntime

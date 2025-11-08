@@ -1,0 +1,4 @@
+networks:
+  isolated_net:
+    internal: true
+  default:

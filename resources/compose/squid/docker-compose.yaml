@@ -1,0 +1,12 @@
+services:
+  squid:
+    image: sameersbn/squid:3.5.27-2
+    platform: linux/amd64
+    container_name: squid
+    volumes:
+      - ./squid/squid-allow.conf:/etc/squid/squid.conf:ro
+    ports:
+      - "3128:3128"
+    networks:
+      - default
+      - isolated_net

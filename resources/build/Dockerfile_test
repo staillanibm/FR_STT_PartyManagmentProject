@@ -1,0 +1,45 @@
+FROM iwhicr.azurecr.io/webmethods-edge-runtime:11.2.3
+
+# A staged build is required if you want to protect these two secrets. Docker secrets could also be used.
+ARG WPM_TOKEN
+ARG GIT_TOKEN
+
+# Copy packages
+# Once development is finished we build a prebaked image with all the packages: adapters, connectors, custom packages imported in the UI, JDBC drivers.
+RUN wpm install -ws https://packages.webmethods.io -wr licensed -j $WPM_TOKEN -d /opt/softwareag/IntegrationServer WmJDBCAdapter:latest
+RUN wpm install -ws https://packages.webmethods.io -wr licensed -j $WPM_TOKEN -d /opt/softwareag/IntegrationServer WmKafkaAdapter:latest
+RUN wpm install -ws https://packages.webmethods.io -wr supported -j $WPM_TOKEN -d /opt/softwareag/IntegrationServer WmAmazonS3Provider:latest
+
+# For the custom packages it's best to point to specific tags.
+# If the custom package contains java services, jcode.sh needs to be used to compile the bytecode (better than placing the bytecode in version control)
+RUN wpm install -ws https://packages.webmethods.io -wr public -j $WPM_TOKEN -d /opt/softwareag/IntegrationServer JcPublicTools:v2.1.0
+RUN wpm install -u staillanibm -p $GIT_TOKEN -r https://github.com/staillanibm -d /opt/softwareag/IntegrationServer cdfKafka:1.0.3
+RUN /opt/softwareag/IntegrationServer/bin/jcode.sh makeall cdfKafka
+
+# The project package implemented in the UI is also copied in the Edge Runtime
+RUN wpm install -u staillanibm -p $GIT_TOKEN -r https://github.com/staillanibm -d /opt/softwareag/IntegrationServer FR_STT_PartyManagmentProject:1.0.3
+
+RUN curl -o /opt/softwareag/IntegrationServer/packages/WmJDBCAdapter/code/jars/postgresql-42.7.4.jar "https://jdbc.postgresql.org/download/postgresql-42.7.4.jar"
+
+
+
+USER 0
+
+# Set authorizations for OpenShift
+RUN chgrp -R 0 \
+      /opt/softwareag/IntegrationServer/packages/FR_STT_PartyManagmentProject \
+      /opt/softwareag/IntegrationServer/packages/cdfKafka \
+      /opt/softwareag/IntegrationServer/packages/JcPublicTools \
+      /opt/softwareag/IntegrationServer/packages/WmJDBCAdapter \
+      /opt/softwareag/IntegrationServer/packages/WmAmazonS3Provider \
+      /opt/softwareag/IntegrationServer/packages/WmKafkaAdapter \
+      && \
+    chmod -R g=u \
+      /opt/softwareag/IntegrationServer/packages/FR_STT_PartyManagmentProject \
+      /opt/softwareag/IntegrationServer/packages/cdfKafka \
+      /opt/softwareag/IntegrationServer/packages/JcPublicTools \
+      /opt/softwareag/IntegrationServer/packages/WmJDBCAdapter \
+      /opt/softwareag/IntegrationServer/packages/WmAmazonS3Provider \
+      /opt/softwareag/IntegrationServer/packages/WmKafkaAdapter 
+
+USER 1724

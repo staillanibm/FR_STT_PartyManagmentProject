@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdf-party-management
+spec:
+  template:
+    spec:
+      containers:
+        - name: cdf-party-management
+          image: default-route-openshift-image-registry.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com/zone-france/cdf-party-management:1.0.3
+
