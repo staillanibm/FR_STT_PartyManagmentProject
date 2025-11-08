@@ -51,9 +51,9 @@ pipeline {
 
                         echo "Validating prerequisites..."
 
-                        # Check kubectl access
-                        if ! /tools/kubectl get nodes > /dev/null 2>&1; then
-                            echo "ERROR: Cannot connect to Kubernetes cluster"
+                        # Check kubectl access by getting current namespace
+                        if ! /tools/kubectl get sa default -n "${OCP_NAMESPACE}" > /dev/null 2>&1; then
+                            echo "ERROR: Cannot connect to Kubernetes cluster or access namespace"
                             exit 1
                         fi
                         echo "✓ Kubernetes cluster accessible"
