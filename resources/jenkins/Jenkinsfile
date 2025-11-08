@@ -2,45 +2,81 @@
 // Declarative Pipeline with parameterized versioning
 
 pipeline {
-    agent any
+    agent {
+        label "${params.REGION}"
+    }
 
     parameters {
+        choice(
+            name: 'REGION',
+            choices: ['france', 'latam'],
+            description: 'Region/Namespace (france → zone-france, latam → zone-latam)'
+        )
         string(
-            name: 'VERSION_BASE',
-            defaultValue: '1.0',
-            description: 'Base version for the build (e.g., 1.0, 2.0)'
+            name: 'VERSION_MAJOR',
+            defaultValue: '1',
+            description: 'Major version (e.g., 1, 2, 3)'
+        )
+        string(
+            name: 'VERSION_MINOR',
+            defaultValue: '0',
+            description: 'Minor version (e.g., 0, 1, 2)'
         )
         string(
             name: 'OCP_REGISTRY',
             defaultValue: 'image-registry.openshift-image-registry.svc:5000',
-            description: 'OpenShift internal registry address'
-        )
-        string(
-            name: 'OCP_NAMESPACE',
-            defaultValue: 'fr-stt-party-management',
-            description: 'OpenShift namespace for ImageStream'
+            description: 'OpenShift internal registry address (e.g., image-registry.openshift-image-registry.svc:5000)'
         )
         string(
             name: 'IMAGE_STREAM_NAME',
-            defaultValue: 'fr-stt-party-management',
-            description: 'ImageStream name in OpenShift'
+            defaultValue: 'cdf-party-management',
+            description: 'ImageStream name in OpenShift (e.g., cdf-party-management)'
         )
         string(
             name: 'ACR_PULL_SECRET',
             defaultValue: 'acr-pull-secret',
             description: 'Name of the OCP secret for ACR base image pull'
         )
+        string(
+            name: 'GIT_TOKEN_CREDENTIAL_ID',
+            defaultValue: 'git-credentials',
+            description: 'Jenkins credential ID for GitHub PAT (for git tag push)'
+        )
     }
 
     environment {
+        // Map region to OCP namespace
+        OCP_NAMESPACE = sh(script: """
+            case "${params.REGION}" in
+                france) echo "zone-france" ;;
+                latam) echo "zone-latam" ;;
+                *) echo "ERROR: Unknown region"; exit 1 ;;
+            esac
+        """, returnStdout: true).trim()
+
         // Set working directory for all stages
         WORKSPACE_DIR = "${WORKSPACE}"
         BUILD_CONTEXT = "${WORKSPACE}/resources/build"
         DOCKERFILE_PATH = "${WORKSPACE}/resources/build/Dockerfile_test"
 
-        // Version management
-        BUILD_NUMBER_PADDED = sh(script: "printf '%02d' ${BUILD_NUMBER}", returnStdout: true).trim()
-        FULL_VERSION = "${params.VERSION_BASE}.${BUILD_NUMBER_PADDED}"
+        // Version management - semantic versioning
+        // MAJOR.MINOR.PATCH where PATCH = last tag patch number + 1
+        VERSION_BASE = "${params.VERSION_MAJOR}.${params.VERSION_MINOR}"
+
+        // Get the last patch number from git tags matching MAJOR.MINOR pattern
+        LAST_PATCH = sh(script: """
+            git tag -l '${VERSION_BASE}.*' 2>/dev/null | \
+            sed 's/${VERSION_BASE}.\\([0-9]*\\)/\\1/' | \
+            sort -n | tail -1
+        """, returnStdout: true).trim()
+
+        // Calculate next patch (if no tags exist, start with 1)
+        NEXT_PATCH = sh(script: """
+            LAST=\${LAST_PATCH:-0}
+            echo \$((LAST + 1))
+        """, returnStdout: true).trim()
+
+        FULL_VERSION = "${VERSION_BASE}.${NEXT_PATCH}"
 
         // OCP ImageStream references
         IMAGE_STREAM_TAG = "${params.IMAGE_STREAM_NAME}:${FULL_VERSION}"
@@ -97,17 +133,36 @@ pipeline {
         stage('Version Tag') {
             steps {
                 script {
-                    echo "Creating repository version tag: v${FULL_VERSION}"
-                    sh '''
-                        # Check if tag already exists
-                        if git rev-parse "v${FULL_VERSION}" >/dev/null 2>&1; then
-                            echo "Tag v${FULL_VERSION} already exists. Skipping tag creation."
-                        else
-                            git tag -a "v${FULL_VERSION}" -m "Release version ${FULL_VERSION} - Build #${BUILD_NUMBER}"
-                            # Push tag to remote repository
-                            git push origin "v${FULL_VERSION}" || echo "Failed to push tag (may be due to permissions or remote issue)"
-                        fi
-                    '''
+                    echo "Creating repository version tag: ${FULL_VERSION}"
+                    withCredentials([string(credentialsId: params.GIT_TOKEN_CREDENTIAL_ID, variable: 'GIT_TOKEN')]) {
+                        sh '''
+                            # Configure git with token for push
+                            git config user.name "Jenkins CI"
+                            git config user.email "jenkins@sttlab.eu"
+
+                            # Check if tag already exists
+                            if git rev-parse "${FULL_VERSION}" >/dev/null 2>&1; then
+                                echo "Tag ${FULL_VERSION} already exists. Skipping tag creation."
+                            else
+                                # Create annotated tag
+                                git tag -a "${FULL_VERSION}" -m "Release version ${FULL_VERSION} - Build #${BUILD_NUMBER}"
+
+                                # Push tag to remote using PAT token
+                                # Extract remote URL and rewrite with token
+                                REMOTE_URL=$(git config --get remote.origin.url)
+                                if [[ "${REMOTE_URL}" == https://* ]]; then
+                                    # HTTPS URL: https://github.com/user/repo.git
+                                    REMOTE_WITH_TOKEN=$(echo "${REMOTE_URL}" | sed "s|https://|https://oauth2:${GIT_TOKEN}@|")
+                                    git push "${REMOTE_WITH_TOKEN}" "${FULL_VERSION}"
+                                else
+                                    # SSH URL or other - use token auth
+                                    echo "ERROR: Only HTTPS git URLs are supported for PAT authentication"
+                                    exit 1
+                                fi
+                                echo "✓ Tag ${FULL_VERSION} pushed to remote"
+                            fi
+                        '''
+                    }
                 }
             }
         }
@@ -227,7 +282,6 @@ pipeline {
         always {
             script {
                 echo "Cleaning up temporary resources..."
-                // Optional: Clean workspace on failure
                 sh '''
                     # Optionally remove dangling images
                     docker image prune -f --filter "dangling=true" || true
@@ -237,7 +291,6 @@ pipeline {
         failure {
             script {
                 echo "ERROR: CI Pipeline failed"
-                // You can add notifications here (Slack, email, etc.)
             }
         }
         success {
