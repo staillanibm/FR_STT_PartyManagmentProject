@@ -1,0 +1,28 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: cdf-party-management-build
+  namespace: ${OCP_NAMESPACE}
+spec:
+  source:
+    type: Git
+    git:
+      uri: https://github.com/staillanibm/FR_STT_PartyManagmentProject
+      ref: main
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: resources/build/Dockerfile_test
+      buildArgs:
+      - name: VERSION
+        value: ${FULL_VERSION}
+      - name: WPM_TOKEN
+        value: ${WPM_TOKEN}
+      - name: GIT_TOKEN
+        value: ${GIT_TOKEN}
+  output:
+    to:
+      kind: ImageStreamTag
+      name: cdf-party-management:${FULL_VERSION}
+      namespace: ${OCP_NAMESPACE}
+  runPolicy: Serial

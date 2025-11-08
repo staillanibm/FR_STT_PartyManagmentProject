@@ -16,6 +16,12 @@ spec:
     spec:
       serviceAccountName: jenkins-agent
       initContainers:
+      - name: install-kubectl
+        image: bitnami/kubectl:latest
+        command: ['sh', '-c', 'cp /opt/bitnami/kubectl/bin/kubectl /tools/kubectl && chmod +x /tools/kubectl']
+        volumeMounts:
+        - name: tools
+          mountPath: /tools
       - name: fix-workspace-perms
         image: busybox:latest
         command: ['sh', '-c', 'mkdir -p /tmp/jenkins-agent/workspace && mkdir -p /home/jenkins/agent && chmod 777 /home/jenkins && chmod 777 /home/jenkins/agent || true']
@@ -76,10 +82,14 @@ spec:
           mountPath: /tmp/jenkins-agent
         - name: home-jenkins
           mountPath: /home/jenkins
+        - name: tools
+          mountPath: /tools
       volumes:
       - name: workspace
         emptyDir: {}
       - name: home-jenkins
+        emptyDir: {}
+      - name: tools
         emptyDir: {}
       nodeSelector:
         kubernetes.io/os: linux

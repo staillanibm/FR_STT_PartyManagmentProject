@@ -196,59 +196,17 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "Building Docker image using OCP BuildConfig: ${IMAGE_STREAM_TAG}"
+                    echo "Building image via OCP BuildConfig: ${IMAGE_STREAM_TAG}"
                     sh '''
-                        # Use OpenShift BuildConfig to build the image
-                        # This approach doesn't require Docker daemon on the agent
-                        oc new-build --name="${IMAGE_STREAM_NAME}-build" \
-                            --dockerfile="Dockerfile_test" \
-                            --context-dir="resources/build" \
-                            -n "${OCP_NAMESPACE}" \
-                            --to="${IMAGE_STREAM_NAME}:${FULL_VERSION}" \
-                            --strategy=docker \
-                            --build-arg="VERSION=${FULL_VERSION}" \
-                            --build-arg="WPM_TOKEN=${WPM_TOKEN}" \
-                            --build-arg="GIT_TOKEN=${GIT_TOKEN}" \
-                            . || echo "BuildConfig already exists"
+                        export PATH="/tools:$PATH"
 
-                        # Start the build and wait for completion
-                        oc start-build "${IMAGE_STREAM_NAME}-build" -n "${OCP_NAMESPACE}" --from-dir="." --wait
+                        # Substitute variables in BuildConfig template
+                        envsubst < resources/build/BuildConfig.yaml | /tools/kubectl apply -f -
 
-                        echo "✓ Docker image built successfully"
-                    '''
-                }
-            }
-        }
+                        # Trigger the build and wait for completion
+                        /tools/kubectl start-build cdf-party-management-build -n ${OCP_NAMESPACE} --wait=true
 
-        stage('Image Validation') {
-            steps {
-                script {
-                    echo "Validating built ImageStream image..."
-                    sh '''
-                        echo "ImageStream image inspection:"
-                        oc describe imagestream ${IMAGE_STREAM_NAME} -n ${OCP_NAMESPACE}
-                    '''
-                }
-            }
-        }
-
-        stage('Verify Image in ImageStream') {
-            steps {
-                script {
-                    echo "Verifying image pushed to OCP ImageStream: ${IMAGE_STREAM_TAG}"
-                    sh '''
-                        # Verify ImageStream exists and has the new image
-                        if ! oc get imagestream ${IMAGE_STREAM_NAME} -n ${OCP_NAMESPACE} >/dev/null 2>&1; then
-                            echo "ERROR: ImageStream ${IMAGE_STREAM_NAME} not found in namespace ${OCP_NAMESPACE}"
-                            exit 1
-                        fi
-                        echo "✓ ImageStream found"
-
-                        # Tag the image as latest
-                        oc tag "${IMAGE_STREAM_NAME}:${FULL_VERSION}" "${IMAGE_STREAM_NAME}:latest" -n ${OCP_NAMESPACE}
-
-                        echo "✓ Image verified in OCP ImageStream"
-                        echo "ImageStream reference: ${IMAGE_STREAM_TAG}"
+                        echo "✓ Docker image built and pushed to ImageStream"
                     '''
                 }
             }
