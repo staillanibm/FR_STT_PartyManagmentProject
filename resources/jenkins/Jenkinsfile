@@ -2,7 +2,9 @@
 // Single build that deploys to multiple OCP regions (zone-france, zone-latam)
 
 pipeline {
-    agent any
+    agent {
+        label "zone-france"
+    }
 
     parameters {
         string(
