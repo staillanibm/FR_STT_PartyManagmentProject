@@ -58,13 +58,6 @@ pipeline {
                         fi
                         echo "✓ Kubernetes cluster accessible"
 
-                        # Check namespace exists
-                        if ! /tools/kubectl get namespace "${OCP_NAMESPACE}" > /dev/null 2>&1; then
-                            echo "ERROR: Namespace ${OCP_NAMESPACE} does not exist"
-                            exit 1
-                        fi
-                        echo "✓ Namespace ${OCP_NAMESPACE} found"
-
                         # Check deployment exists
                         if ! /tools/kubectl get deployment "${DEPLOYMENT_NAME}" -n "${OCP_NAMESPACE}" > /dev/null 2>&1; then
                             echo "ERROR: Deployment ${DEPLOYMENT_NAME} not found"
