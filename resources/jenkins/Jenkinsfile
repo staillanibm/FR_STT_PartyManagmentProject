@@ -63,17 +63,20 @@ pipeline {
         // MAJOR.MINOR.PATCH where PATCH = last tag patch number + 1
         VERSION_BASE = "${params.VERSION_MAJOR}.${params.VERSION_MINOR}"
 
-        // Get the last patch number from git tags matching MAJOR.MINOR pattern
-        LAST_PATCH = sh(script: """
-            git tag -l '\${VERSION_BASE}.*' 2>/dev/null | \
-            grep -o '[0-9]*\$' | \
-            sort -n | tail -1
-        """, returnStdout: true).trim()
-
-        // Calculate next patch (if no tags exist, start with 1)
+        // Calculate next patch number by finding max patch from existing tags
         NEXT_PATCH = sh(script: """
-            LAST=\${LAST_PATCH:-0}
-            echo \$((LAST + 1))
+            # Get all tags matching VERSION_BASE pattern (e.g., "1.0.X")
+            MAX_PATCH=0
+            for tag in \$(git tag -l '${VERSION_BASE}.*' 2>/dev/null); do
+                # Extract patch number from tag (e.g., "1.0.5" -> "5")
+                PATCH=\${tag##*.}
+                # Keep highest patch number
+                if [ \$PATCH -gt \$MAX_PATCH ]; then
+                    MAX_PATCH=\$PATCH
+                fi
+            done
+            # Next patch is current max + 1, or 1 if no tags exist
+            echo \$((MAX_PATCH + 1))
         """, returnStdout: true).trim()
 
         FULL_VERSION = "${VERSION_BASE}.${NEXT_PATCH}"
@@ -221,11 +224,49 @@ pipeline {
                                 resources/build/BuildConfig.yaml | /tools/kubectl apply -f -
 
                             # Trigger the build by creating a Build resource
-                            sed -e "s|\\\${OCP_NAMESPACE}|${OCP_NAMESPACE}|g" \
+                            BUILD_OUTPUT=\$(sed -e "s|\\\${OCP_NAMESPACE}|${OCP_NAMESPACE}|g" \
                                 -e "s|\\\${FULL_VERSION}|${FULL_VERSION}|g" \
                                 -e "s|\\\${WPM_TOKEN}|${WPM_TOKEN}|g" \
                                 -e "s|\\\${GIT_TOKEN}|${GIT_TOKEN}|g" \
-                                resources/build/Build.yaml | /tools/kubectl create -f -
+                                resources/build/Build.yaml | /tools/kubectl create -f -)
+
+                            # Extract Build name from output (e.g., "build.build.openshift.io/cdf-party-management-build-xyz created")
+                            BUILD_NAME=\$(echo "\${BUILD_OUTPUT}" | grep -oP 'cdf-party-management-build-[a-z0-9]+' || echo "")
+
+                            if [ -z "\${BUILD_NAME}" ]; then
+                                echo "ERROR: Could not determine Build resource name"
+                                exit 1
+                            fi
+
+                            echo "Waiting for Build \${BUILD_NAME} to complete..."
+
+                            # Wait for build to complete (max 30 minutes)
+                            TIMEOUT=1800
+                            ELAPSED=0
+                            while [ \$ELAPSED -lt \$TIMEOUT ]; do
+                                PHASE=\$(/tools/kubectl get build \${BUILD_NAME} -n ${OCP_NAMESPACE} -o jsonpath='{.status.phase}' 2>/dev/null || echo "")
+
+                                if [ "\${PHASE}" = "Complete" ]; then
+                                    echo "✓ Build completed successfully"
+                                    break
+                                elif [ "\${PHASE}" = "Failed" ] || [ "\${PHASE}" = "Error" ]; then
+                                    echo "ERROR: Build failed with phase: \${PHASE}"
+                                    /tools/kubectl logs -n ${OCP_NAMESPACE} \${BUILD_NAME}-build 2>/dev/null || true
+                                    exit 1
+                                elif [ "\${PHASE}" = "Cancelled" ]; then
+                                    echo "ERROR: Build was cancelled"
+                                    exit 1
+                                fi
+
+                                echo "Build phase: \${PHASE}... (\$ELAPSED seconds)"
+                                sleep 10
+                                ELAPSED=\$((ELAPSED + 10))
+                            done
+
+                            if [ \$ELAPSED -ge \$TIMEOUT ]; then
+                                echo "ERROR: Build timeout after 30 minutes"
+                                exit 1
+                            fi
 
                             echo "✓ Docker image built and pushed to ImageStream"
                         """
