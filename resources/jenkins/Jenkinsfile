@@ -203,8 +203,8 @@ pipeline {
                         # Substitute variables in BuildConfig template
                         envsubst < resources/build/BuildConfig.yaml | /tools/kubectl apply -f -
 
-                        # Trigger the build and wait for completion
-                        /tools/kubectl start-build cdf-party-management-build -n ${OCP_NAMESPACE} --wait=true
+                        # Trigger the build by creating a Build resource
+                        envsubst < resources/build/Build.yaml | /tools/kubectl create -f -
 
                         echo "✓ Docker image built and pushed to ImageStream"
                     '''

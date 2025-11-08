@@ -1,0 +1,16 @@
+apiVersion: build.openshift.io/v1
+kind: Build
+metadata:
+  generateName: cdf-party-management-build-
+  namespace: ${OCP_NAMESPACE}
+spec:
+  buildConfigRef:
+    name: cdf-party-management-build
+  strategy:
+    type: Docker
+    dockerStrategy: {}
+  source:
+    type: Git
+    git:
+      uri: https://github.com/staillanibm/FR_STT_PartyManagmentProject
+      ref: main

@@ -11,6 +11,10 @@ rules:
 - apiGroups: ["apps"]
   resources: ["deployments", "deployments/rollback"]
   verbs: ["get", "list", "watch", "patch", "update"]
+# BuildConfig operations
+- apiGroups: ["build.openshift.io"]
+  resources: ["buildconfigs", "buildconfigs/instantiate", "builds"]
+  verbs: ["get", "list", "create", "update", "patch"]
 # Pod operations
 - apiGroups: [""]
   resources: ["pods", "pods/log", "pods/status"]
