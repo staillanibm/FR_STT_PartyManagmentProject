@@ -82,28 +82,31 @@ kubectl get secret ${SECRET_NAME} \
 
 **Repeat this for zone-latam with `NAMESPACE="zone-latam"`**
 
-### 2. Configure Docker Access on Jenkins Agent
+### 2. Create ACR Pull Secret for Base Image Access
 
-**For each namespace** (zone-france, zone-latam):
+**For each namespace** (zone-france, zone-latam), create a Docker registry secret for pulling the base image from Azure Container Registry:
 
 ```bash
 # Define variables
-NAMESPACE="zone-france"  # Change to "zone-latam" for second agent
-SERVICE_ACCOUNT="${DEPLOYMENT_NAME}-jenkins"
-SECRET_NAME="${DEPLOYMENT_NAME}-jenkins-token"
+NAMESPACE="zone-france"  # Change to "zone-latam" for second namespace
+SECRET_NAME="acr-pull-secret"
 
-# Extract token from the namespace-specific secret
-TOKEN=$(kubectl get secret ${SECRET_NAME} \
-  -n ${NAMESPACE} -o jsonpath='{.data.token}' | base64 -d)
+# Create the Docker registry secret using your ACR credentials
+# Replace with your actual ACR registry, username, and password
+kubectl create secret docker-registry ${SECRET_NAME} \
+  --docker-server=iwhicr.azurecr.io \
+  --docker-username=<YOUR_ACR_USERNAME> \
+  --docker-password=<YOUR_ACR_PASSWORD> \
+  --docker-email=your-email@example.com \
+  -n ${NAMESPACE}
 
-# Login to OCP ImageStream registry (for push)
-docker login -u serviceaccount -p ${TOKEN} ${OCP_REGISTRY}
-
-# Login to ACR (for base image pull - SHARED credential)
-docker login ${WHI_CR_SERVER} -u ${WHI_CR_USERNAME} -p ${WHI_CR_PASSWORD}
+# Verify the secret was created
+kubectl get secret ${SECRET_NAME} -n ${NAMESPACE}
 ```
 
-**Note**: OCP registry login is per-namespace, ACR login is shared.
+**Repeat this for zone-latam with `NAMESPACE="zone-latam"`**
+
+**Note**: The ACR credentials are stored in Kubernetes secrets within each namespace. The OCP build system will use this secret to authenticate pulling the base image.
 
 ### 3. Add Tokens to Jenkins (One Per Namespace)
 

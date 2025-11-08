@@ -66,7 +66,7 @@ pipeline {
         // Get the last patch number from git tags matching MAJOR.MINOR pattern
         LAST_PATCH = sh(script: """
             git tag -l '${VERSION_BASE}.*' 2>/dev/null | \
-            sed 's/${VERSION_BASE}.\\([0-9]*\\)/\\1/' | \
+            grep -o '[0-9]*$' | \
             sort -n | tail -1
         """, returnStdout: true).trim()
 
