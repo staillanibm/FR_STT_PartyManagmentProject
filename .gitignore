@@ -1,0 +1,13 @@
+*.bak
+.env*
+*.jks
+*.p12
+*.jar
+*.pem
+*.crt 
+*.key
+*.b64
+*secret*.yaml
+*secret*.yml
+.DS_Store
+
