@@ -175,6 +175,8 @@ pipeline {
                 script {
                     echo "Validating build prerequisites..."
                     sh '''
+                        export PATH="/tools:$PATH"
+
                         # Check if Dockerfile exists
                         if [ ! -f "${DOCKERFILE_PATH}" ]; then
                             echo "ERROR: Dockerfile not found at ${DOCKERFILE_PATH}"
@@ -182,12 +184,19 @@ pipeline {
                         fi
                         echo "✓ Dockerfile found"
 
-                        # Check Docker daemon
-                        if ! docker ps > /dev/null 2>&1; then
-                            echo "ERROR: Docker daemon not accessible"
+                        # Check kubectl availability
+                        if ! /tools/kubectl version > /dev/null 2>&1; then
+                            echo "ERROR: kubectl not accessible"
                             exit 1
                         fi
-                        echo "✓ Docker daemon is accessible"
+                        echo "✓ kubectl is accessible"
+
+                        # Check OCP namespace exists
+                        if ! /tools/kubectl get namespace ${OCP_NAMESPACE} > /dev/null 2>&1; then
+                            echo "ERROR: OCP namespace ${OCP_NAMESPACE} not found"
+                            exit 1
+                        fi
+                        echo "✓ OCP namespace ${OCP_NAMESPACE} exists"
                     '''
                 }
             }
