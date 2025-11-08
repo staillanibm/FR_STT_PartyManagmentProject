@@ -1,0 +1,288 @@
+// Jenkins Pipeline for CD Phase - Zone France
+// Deploys cdf-party-management image to zone-france namespace
+
+pipeline {
+    agent {
+        label "zone-france"
+    }
+
+    parameters {
+        string(
+            name: 'IMAGE_TAG',
+            description: 'ImageStream tag to deploy (e.g., 1.0.7)'
+        )
+    }
+
+    environment {
+        OCP_NAMESPACE = "zone-france"
+        DEPLOYMENT_NAME = "cdf-party-management"
+        IMAGE_STREAM_NAME = "cdf-party-management"
+        IMAGE_REGISTRY = "image-registry.openshift-image-registry.svc:5000"
+        IMAGE_REFERENCE = "${IMAGE_REGISTRY}/${OCP_NAMESPACE}/${IMAGE_STREAM_NAME}:${params.IMAGE_TAG}"
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        timeout(time: 15, unit: 'MINUTES')
+        timestamps()
+    }
+
+    stages {
+        stage('Environment Setup') {
+            steps {
+                script {
+                    echo "=========================================="
+                    echo "CD Pipeline - Zone France"
+                    echo "=========================================="
+                    echo "Namespace: ${OCP_NAMESPACE}"
+                    echo "Deployment: ${DEPLOYMENT_NAME}"
+                    echo "ImageStream: ${IMAGE_STREAM_NAME}:${params.IMAGE_TAG}"
+                    echo "Image Reference: ${IMAGE_REFERENCE}"
+                    echo "=========================================="
+                }
+            }
+        }
+
+        stage('Pre-Deployment Validation') {
+            steps {
+                script {
+                    sh '''
+                        export PATH="/tools:$PATH"
+
+                        echo "Validating prerequisites..."
+
+                        # Check kubectl access
+                        if ! /tools/kubectl cluster-info > /dev/null 2>&1; then
+                            echo "ERROR: Cannot connect to Kubernetes cluster"
+                            exit 1
+                        fi
+                        echo "✓ Kubernetes cluster accessible"
+
+                        # Check namespace exists
+                        if ! /tools/kubectl get namespace "${OCP_NAMESPACE}" > /dev/null 2>&1; then
+                            echo "ERROR: Namespace ${OCP_NAMESPACE} does not exist"
+                            exit 1
+                        fi
+                        echo "✓ Namespace ${OCP_NAMESPACE} found"
+
+                        # Check deployment exists
+                        if ! /tools/kubectl get deployment "${DEPLOYMENT_NAME}" -n "${OCP_NAMESPACE}" > /dev/null 2>&1; then
+                            echo "ERROR: Deployment ${DEPLOYMENT_NAME} not found"
+                            exit 1
+                        fi
+                        echo "✓ Deployment ${DEPLOYMENT_NAME} found"
+
+                        # Check ImageStream tag exists
+                        if ! /tools/kubectl get imagestreamtag "${IMAGE_STREAM_NAME}:${IMAGE_TAG}" -n "${OCP_NAMESPACE}" > /dev/null 2>&1; then
+                            echo "ERROR: ImageStream tag ${IMAGE_STREAM_NAME}:${IMAGE_TAG} not found"
+                            exit 1
+                        fi
+                        echo "✓ ImageStream tag ${IMAGE_STREAM_NAME}:${IMAGE_TAG} found"
+                    '''
+                }
+            }
+        }
+
+        stage('Save Current State') {
+            steps {
+                script {
+                    sh '''
+                        export PATH="/tools:$PATH"
+
+                        echo "Saving current deployment state..."
+
+                        # Get current image
+                        CURRENT_IMAGE=$(/tools/kubectl get deployment "${DEPLOYMENT_NAME}" \
+                            -n "${OCP_NAMESPACE}" \
+                            -o jsonpath='{.spec.template.spec.containers[0].image}')
+
+                        echo "Current Image: ${CURRENT_IMAGE}"
+                        echo "${CURRENT_IMAGE}" > /tmp/previous_image.txt
+
+                        echo "✓ State saved"
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Image') {
+            steps {
+                script {
+                    sh '''
+                        export PATH="/tools:$PATH"
+
+                        echo "Deploying new image to ${OCP_NAMESPACE}..."
+                        echo "Image: ${IMAGE_REFERENCE}"
+
+                        # Update deployment with new image
+                        /tools/kubectl set image deployment/"${DEPLOYMENT_NAME}" \
+                            "${DEPLOYMENT_NAME}"="${IMAGE_REFERENCE}" \
+                            -n "${OCP_NAMESPACE}" \
+                            --record
+
+                        echo "✓ Image update initiated"
+                    '''
+                }
+            }
+        }
+
+        stage('Wait for Rollout') {
+            steps {
+                script {
+                    sh '''
+                        export PATH="/tools:$PATH"
+
+                        echo "Waiting for rollout to complete..."
+
+                        /tools/kubectl rollout status deployment/"${DEPLOYMENT_NAME}" \
+                            -n "${OCP_NAMESPACE}" \
+                            --timeout=10m
+
+                        echo "✓ Rollout completed successfully"
+                    '''
+                }
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                script {
+                    sh '''
+                        export PATH="/tools:$PATH"
+
+                        echo "Performing health checks..."
+
+                        # Get pod name
+                        POD_NAME=$(/tools/kubectl get pods -n "${OCP_NAMESPACE}" \
+                            -l app="${DEPLOYMENT_NAME}" \
+                            -o jsonpath='{.items[0].metadata.name}')
+
+                        if [ -z "${POD_NAME}" ]; then
+                            echo "ERROR: No pods found for deployment"
+                            exit 1
+                        fi
+
+                        echo "Health checking pod: ${POD_NAME}"
+
+                        # Health check with retries
+                        START_TIME=$(date +%s)
+                        MAX_TIMEOUT=300
+                        MAX_ATTEMPTS=30
+                        ATTEMPT=0
+
+                        while true; do
+                            CURRENT_TIME=$(date +%s)
+                            ELAPSED=$((CURRENT_TIME - START_TIME))
+
+                            if [ ${ELAPSED} -gt ${MAX_TIMEOUT} ]; then
+                                echo "ERROR: Health check timeout after ${ELAPSED} seconds"
+                                exit 1
+                            fi
+
+                            ATTEMPT=$((ATTEMPT + 1))
+
+                            # Try health check endpoint
+                            HTTP_CODE=$(/tools/kubectl exec -n "${OCP_NAMESPACE}" "${POD_NAME}" \
+                                -- curl -f -s -o /dev/null -w "%{http_code}" http://localhost:5555/health 2>/dev/null || echo "000")
+
+                            echo "Attempt ${ATTEMPT}/${MAX_ATTEMPTS} (${ELAPSED}s): HTTP ${HTTP_CODE}"
+
+                            if [ "${HTTP_CODE}" = "200" ]; then
+                                echo "✓ Health check passed - Service is healthy"
+                                exit 0
+                            fi
+
+                            if [ ${ATTEMPT} -ge ${MAX_ATTEMPTS} ]; then
+                                echo "ERROR: Health check failed after ${MAX_ATTEMPTS} attempts"
+                                exit 1
+                            fi
+
+                            echo "Retrying in 10 seconds..."
+                            sleep 10
+                        done
+                    '''
+                }
+            }
+        }
+
+        stage('Deployment Verification') {
+            steps {
+                script {
+                    sh '''
+                        export PATH="/tools:$PATH"
+
+                        echo "Verifying deployment..."
+                        echo ""
+                        echo "Running pods:"
+                        /tools/kubectl get pods -n "${OCP_NAMESPACE}" -l app="${DEPLOYMENT_NAME}" -o wide
+
+                        echo ""
+                        echo "Deployed image:"
+                        /tools/kubectl get deployment "${DEPLOYMENT_NAME}" -n "${OCP_NAMESPACE}" \
+                            -o jsonpath='{.spec.template.spec.containers[0].image}'
+                        echo ""
+
+                        echo "✓ Deployment verified"
+                    '''
+                }
+            }
+        }
+
+        stage('CD Summary') {
+            steps {
+                script {
+                    echo "=========================================="
+                    echo "CD Deployment Completed - Zone France"
+                    echo "=========================================="
+                    echo "Image Tag: ${params.IMAGE_TAG}"
+                    echo "Namespace: ${OCP_NAMESPACE}"
+                    echo "Deployment: ${DEPLOYMENT_NAME}"
+                    echo "Build Duration: ${currentBuild.durationString}"
+                    echo "=========================================="
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            script {
+                echo "=========================================="
+                echo "DEPLOYMENT FAILED - ROLLING BACK"
+                echo "=========================================="
+
+                sh '''
+                    export PATH="/tools:$PATH"
+
+                    PREVIOUS_IMAGE=$(cat /tmp/previous_image.txt 2>/dev/null || echo "")
+
+                    if [ -z "${PREVIOUS_IMAGE}" ]; then
+                        echo "ERROR: Cannot determine previous image"
+                        exit 1
+                    fi
+
+                    echo "Rolling back to: ${PREVIOUS_IMAGE}"
+
+                    /tools/kubectl set image deployment/"${DEPLOYMENT_NAME}" \
+                        "${DEPLOYMENT_NAME}"="${PREVIOUS_IMAGE}" \
+                        -n "${OCP_NAMESPACE}" \
+                        --record
+
+                    /tools/kubectl rollout status deployment/"${DEPLOYMENT_NAME}" \
+                        -n "${OCP_NAMESPACE}" \
+                        --timeout=10m
+
+                    echo "✓ Rollback completed"
+                '''
+            }
+        }
+
+        always {
+            script {
+                sh '''
+                    rm -f /tmp/previous_image.txt
+                '''
+            }
+        }
+    }
+}
