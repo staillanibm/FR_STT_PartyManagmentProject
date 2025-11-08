@@ -1,17 +1,10 @@
 // Jenkins Pipeline for FR_STT_PartyManagementProject CI/CD
-// Declarative Pipeline with parameterized versioning
+// Single build that deploys to multiple OCP regions (zone-france, zone-latam)
 
 pipeline {
-    agent {
-        label "${params.REGION}"
-    }
+    agent any
 
     parameters {
-        choice(
-            name: 'REGION',
-            choices: ['france', 'latam'],
-            description: 'Region/Namespace (france → zone-france, latam → zone-latam)'
-        )
         string(
             name: 'VERSION_MAJOR',
             defaultValue: '1',
@@ -25,12 +18,12 @@ pipeline {
         string(
             name: 'OCP_REGISTRY',
             defaultValue: 'image-registry.openshift-image-registry.svc:5000',
-            description: 'OpenShift internal registry address (e.g., image-registry.openshift-image-registry.svc:5000)'
+            description: 'OpenShift internal registry address'
         )
         string(
             name: 'IMAGE_STREAM_NAME',
             defaultValue: 'cdf-party-management',
-            description: 'ImageStream name in OpenShift (e.g., cdf-party-management)'
+            description: 'ImageStream name in OpenShift'
         )
         string(
             name: 'ACR_PULL_SECRET',
@@ -40,31 +33,19 @@ pipeline {
         string(
             name: 'GIT_TOKEN_CREDENTIAL_ID',
             defaultValue: 'git-credentials',
-            description: 'Jenkins credential ID for GitHub PAT (for git tag push)'
+            description: 'Jenkins credential ID for GitHub PAT'
         )
     }
 
     environment {
-        // Map region to OCP namespace
-        OCP_NAMESPACE = sh(script: """
-            case "${params.REGION}" in
-                france) echo "zone-france" ;;
-                latam) echo "zone-latam" ;;
-                *) echo "ERROR: Unknown region"; exit 1 ;;
-            esac
-        """, returnStdout: true).trim()
-
-        // Set working directory for all stages
-        WORKSPACE_DIR = "${WORKSPACE}"
-        BUILD_CONTEXT = "${WORKSPACE}/resources/build"
-        DOCKERFILE_PATH = "${WORKSPACE}/resources/build/Dockerfile_test"
-
         // Version management - semantic versioning
-        // MAJOR.MINOR.PATCH where PATCH = last tag patch number + 1
         VERSION_BASE = "${params.VERSION_MAJOR}.${params.VERSION_MINOR}"
 
         // Calculate next patch number by finding max patch from existing tags
         NEXT_PATCH = sh(script: """
+            # Fetch latest tags from remote to ensure we have all versions
+            git fetch --tags --force 2>/dev/null || true
+
             # Get all tags matching VERSION_BASE pattern (e.g., "1.0.X")
             MAX_PATCH=0
             for tag in \$(git tag -l '${VERSION_BASE}.*' 2>/dev/null); do
@@ -81,24 +62,17 @@ pipeline {
 
         FULL_VERSION = "${VERSION_BASE}.${NEXT_PATCH}"
 
-        // OCP ImageStream references
-        IMAGE_STREAM_TAG = "${params.IMAGE_STREAM_NAME}:${FULL_VERSION}"
-        IMAGE_STREAM_LATEST = "${params.IMAGE_STREAM_NAME}:latest"
-        OCP_IMAGE_REFERENCE = "${params.OCP_REGISTRY}/${OCP_NAMESPACE}/${IMAGE_STREAM_TAG}"
+        // Both regions/namespaces
+        OCP_NAMESPACES = "zone-france zone-latam"
 
-        // Docker build tags (temporary, pushed to OCP ImageStream)
-        DOCKER_BUILD_TAG = "${params.IMAGE_STREAM_NAME}:${FULL_VERSION}"
-        DOCKER_BUILD_LATEST = "${params.IMAGE_STREAM_NAME}:latest"
+        BUILD_CONTEXT = "${WORKSPACE}/resources/build"
+        DOCKERFILE_PATH = "${WORKSPACE}/resources/build/Dockerfile_test"
     }
 
     options {
-        // Keep last 30 builds
         buildDiscarder(logRotator(numToKeepStr: '30'))
-        // Timeout for the entire pipeline
-        timeout(time: 2, unit: 'HOURS')
-        // Disable concurrent builds
+        timeout(time: 3, unit: 'HOURS')
         disableConcurrentBuilds()
-        // Add timestamps to logs
         timestamps()
     }
 
@@ -109,16 +83,12 @@ pipeline {
                     echo "=========================================="
                     echo "Pipeline Configuration"
                     echo "=========================================="
-                    echo "Base Version: ${params.VERSION_BASE}"
+                    echo "Version: ${FULL_VERSION}"
                     echo "Build Number: ${BUILD_NUMBER}"
-                    echo "Full Version: ${FULL_VERSION}"
                     echo "OCP Registry: ${params.OCP_REGISTRY}"
-                    echo "OCP Namespace: ${params.OCP_NAMESPACE}"
-                    echo "ImageStream: ${IMAGE_STREAM_TAG}"
-                    echo "OCP Image Reference: ${OCP_IMAGE_REFERENCE}"
-                    echo "Build Context: ${BUILD_CONTEXT}"
+                    echo "Namespaces: ${OCP_NAMESPACES}"
+                    echo "ImageStream: ${params.IMAGE_STREAM_NAME}:${FULL_VERSION}"
                     echo "Dockerfile: ${DOCKERFILE_PATH}"
-                    echo "ACR Pull Secret: ${params.ACR_PULL_SECRET}"
                     echo "=========================================="
                 }
             }
@@ -151,16 +121,13 @@ pipeline {
                                 git tag -a "${FULL_VERSION}" -m "Release version ${FULL_VERSION} - Build #${BUILD_NUMBER}"
 
                                 # Push tag to remote using PAT token
-                                # Extract remote URL and rewrite with token
                                 REMOTE_URL=$(git config --get remote.origin.url)
                                 case "${REMOTE_URL}" in
                                     https://*)
-                                        # HTTPS URL: https://github.com/user/repo.git
                                         REMOTE_WITH_TOKEN=$(echo "${REMOTE_URL}" | sed "s|https://|https://oauth2:${GIT_TOKEN}@|")
                                         git push "${REMOTE_WITH_TOKEN}" "${FULL_VERSION}"
                                         ;;
                                     *)
-                                        # SSH URL or other - use token auth
                                         echo "ERROR: Only HTTPS git URLs are supported for PAT authentication"
                                         exit 1
                                         ;;
@@ -194,21 +161,22 @@ pipeline {
                         fi
                         echo "✓ kubectl is accessible"
 
-                        # Verify kubectl can access the API by listing buildconfigs
-                        if ! /tools/kubectl get buildconfigs -n ${OCP_NAMESPACE} > /dev/null 2>&1; then
-                            echo "ERROR: Cannot access OCP namespace ${OCP_NAMESPACE}"
-                            exit 1
-                        fi
-                        echo "✓ OCP namespace ${OCP_NAMESPACE} accessible"
+                        # Verify access to both namespaces
+                        for ns in ${OCP_NAMESPACES}; do
+                            if ! /tools/kubectl get buildconfigs -n $ns > /dev/null 2>&1; then
+                                echo "ERROR: Cannot access OCP namespace $ns"
+                                exit 1
+                            fi
+                            echo "✓ OCP namespace $ns accessible"
+                        done
                     '''
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build and Deploy to All Regions') {
             steps {
                 script {
-                    echo "Building image via OCP BuildConfig: ${IMAGE_STREAM_TAG}"
                     withCredentials([
                         string(credentialsId: 'wpm-token', variable: 'WPM_TOKEN'),
                         string(credentialsId: 'git-credentials', variable: 'GIT_TOKEN')
@@ -216,59 +184,66 @@ pipeline {
                         sh """
                             export PATH="/tools:\$PATH"
 
-                            # Substitute variables in BuildConfig template using sed
-                            sed -e "s|\\\${OCP_NAMESPACE}|${OCP_NAMESPACE}|g" \
-                                -e "s|\\\${FULL_VERSION}|${FULL_VERSION}|g" \
-                                -e "s|\\\${WPM_TOKEN}|${WPM_TOKEN}|g" \
-                                -e "s|\\\${GIT_TOKEN}|${GIT_TOKEN}|g" \
-                                resources/build/BuildConfig.yaml | /tools/kubectl apply -f -
+                            # Build and push to each namespace
+                            for NAMESPACE in ${OCP_NAMESPACES}; do
+                                echo "=========================================="
+                                echo "Building for namespace: \$NAMESPACE"
+                                echo "=========================================="
 
-                            # Trigger the build by creating a Build resource
-                            BUILD_OUTPUT=\$(sed -e "s|\\\${OCP_NAMESPACE}|${OCP_NAMESPACE}|g" \
-                                -e "s|\\\${FULL_VERSION}|${FULL_VERSION}|g" \
-                                -e "s|\\\${WPM_TOKEN}|${WPM_TOKEN}|g" \
-                                -e "s|\\\${GIT_TOKEN}|${GIT_TOKEN}|g" \
-                                resources/build/Build.yaml | /tools/kubectl create -f -)
+                                # Substitute variables in BuildConfig template
+                                sed -e "s|\\\${OCP_NAMESPACE}|\$NAMESPACE|g" \
+                                    -e "s|\\\${FULL_VERSION}|${FULL_VERSION}|g" \
+                                    -e "s|\\\${WPM_TOKEN}|${WPM_TOKEN}|g" \
+                                    -e "s|\\\${GIT_TOKEN}|${GIT_TOKEN}|g" \
+                                    resources/build/BuildConfig.yaml | /tools/kubectl apply -f -
 
-                            # Extract Build name from output (e.g., "build.build.openshift.io/cdf-party-management-build-xyz created")
-                            BUILD_NAME=\$(echo "\${BUILD_OUTPUT}" | grep -oP 'cdf-party-management-build-[a-z0-9]+' || echo "")
+                                # Trigger the build by creating a Build resource
+                                BUILD_OUTPUT=\$(sed -e "s|\\\${OCP_NAMESPACE}|\$NAMESPACE|g" \
+                                    -e "s|\\\${FULL_VERSION}|${FULL_VERSION}|g" \
+                                    -e "s|\\\${WPM_TOKEN}|${WPM_TOKEN}|g" \
+                                    -e "s|\\\${GIT_TOKEN}|${GIT_TOKEN}|g" \
+                                    resources/build/Build.yaml | /tools/kubectl create -f -)
 
-                            if [ -z "\${BUILD_NAME}" ]; then
-                                echo "ERROR: Could not determine Build resource name"
-                                exit 1
-                            fi
+                                # Extract Build name from output
+                                BUILD_NAME=\$(echo "\${BUILD_OUTPUT}" | grep -oP 'cdf-party-management-build-[a-z0-9]+' || echo "")
 
-                            echo "Waiting for Build \${BUILD_NAME} to complete..."
-
-                            # Wait for build to complete (max 30 minutes)
-                            TIMEOUT=1800
-                            ELAPSED=0
-                            while [ \$ELAPSED -lt \$TIMEOUT ]; do
-                                PHASE=\$(/tools/kubectl get build \${BUILD_NAME} -n ${OCP_NAMESPACE} -o jsonpath='{.status.phase}' 2>/dev/null || echo "")
-
-                                if [ "\${PHASE}" = "Complete" ]; then
-                                    echo "✓ Build completed successfully"
-                                    break
-                                elif [ "\${PHASE}" = "Failed" ] || [ "\${PHASE}" = "Error" ]; then
-                                    echo "ERROR: Build failed with phase: \${PHASE}"
-                                    /tools/kubectl logs -n ${OCP_NAMESPACE} \${BUILD_NAME}-build 2>/dev/null || true
-                                    exit 1
-                                elif [ "\${PHASE}" = "Cancelled" ]; then
-                                    echo "ERROR: Build was cancelled"
+                                if [ -z "\${BUILD_NAME}" ]; then
+                                    echo "ERROR: Could not determine Build resource name for \$NAMESPACE"
                                     exit 1
                                 fi
 
-                                echo "Build phase: \${PHASE}... (\$ELAPSED seconds)"
-                                sleep 10
-                                ELAPSED=\$((ELAPSED + 10))
+                                echo "Waiting for Build \${BUILD_NAME} in \$NAMESPACE to complete..."
+
+                                # Wait for build to complete (max 30 minutes)
+                                TIMEOUT=1800
+                                ELAPSED=0
+                                while [ \$ELAPSED -lt \$TIMEOUT ]; do
+                                    PHASE=\$(/tools/kubectl get build \${BUILD_NAME} -n \$NAMESPACE -o jsonpath='{.status.phase}' 2>/dev/null || echo "")
+
+                                    if [ "\${PHASE}" = "Complete" ]; then
+                                        echo "✓ Build \${BUILD_NAME} completed successfully in \$NAMESPACE"
+                                        break
+                                    elif [ "\${PHASE}" = "Failed" ] || [ "\${PHASE}" = "Error" ]; then
+                                        echo "ERROR: Build failed in \$NAMESPACE with phase: \${PHASE}"
+                                        /tools/kubectl logs -n \$NAMESPACE \${BUILD_NAME}-build 2>/dev/null || true
+                                        exit 1
+                                    elif [ "\${PHASE}" = "Cancelled" ]; then
+                                        echo "ERROR: Build was cancelled in \$NAMESPACE"
+                                        exit 1
+                                    fi
+
+                                    echo "Build phase: \${PHASE}... (\$ELAPSED seconds)"
+                                    sleep 10
+                                    ELAPSED=\$((ELAPSED + 10))
+                                done
+
+                                if [ \$ELAPSED -ge \$TIMEOUT ]; then
+                                    echo "ERROR: Build timeout after 30 minutes in \$NAMESPACE"
+                                    exit 1
+                                fi
                             done
 
-                            if [ \$ELAPSED -ge \$TIMEOUT ]; then
-                                echo "ERROR: Build timeout after 30 minutes"
-                                exit 1
-                            fi
-
-                            echo "✓ Docker image built and pushed to ImageStream"
+                            echo "✓ Docker image built and pushed to all ImageStreams"
                         """
                     }
                 }
@@ -282,13 +257,10 @@ pipeline {
                     echo "CI Pipeline Completed Successfully"
                     echo "=========================================="
                     echo "Version: ${FULL_VERSION}"
-                    echo "OCP ImageStream: ${IMAGE_STREAM_TAG}"
-                    echo "ImageStream Reference: ${OCP_IMAGE_REFERENCE}"
+                    echo "ImageStream: ${params.IMAGE_STREAM_NAME}:${FULL_VERSION}"
+                    echo "Regions: zone-france, zone-latam"
                     echo "Build Duration: ${currentBuild.durationString}"
                     echo "=========================================="
-                    echo ""
-                    echo "Image is now available in OCP ImageStream"
-                    echo "Next steps: Deploy to OCP using CD pipeline"
                 }
             }
         }
@@ -297,11 +269,7 @@ pipeline {
     post {
         always {
             script {
-                echo "Cleaning up temporary resources..."
-                sh '''
-                    # Clean up old BuildConfigs (OCP native builds don't need cleanup)
-                    echo "✓ Pipeline cleanup complete"
-                '''
+                echo "✓ Pipeline cleanup complete"
             }
         }
         failure {
