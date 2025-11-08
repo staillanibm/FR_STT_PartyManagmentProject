@@ -8,7 +8,6 @@ bases:
 
 resources:
   - secrets.yaml
-  - rbac.yaml
 
 configMapGenerator:
   - name: jenkins-agent-config

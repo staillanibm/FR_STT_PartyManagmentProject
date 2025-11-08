@@ -23,6 +23,10 @@ rules:
 - apiGroups: [""]
   resources: ["services"]
   verbs: ["get", "list"]
+# ServiceAccount operations (for validation)
+- apiGroups: [""]
+  resources: ["serviceaccounts"]
+  verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
