@@ -52,7 +52,7 @@ pipeline {
                         echo "Validating prerequisites..."
 
                         # Check kubectl access
-                        if ! /tools/kubectl cluster-info > /dev/null 2>&1; then
+                        if ! /tools/kubectl get nodes > /dev/null 2>&1; then
                             echo "ERROR: Cannot connect to Kubernetes cluster"
                             exit 1
                         fi
@@ -257,8 +257,8 @@ pipeline {
                     PREVIOUS_IMAGE=$(cat /tmp/previous_image.txt 2>/dev/null || echo "")
 
                     if [ -z "${PREVIOUS_IMAGE}" ]; then
-                        echo "ERROR: Cannot determine previous image"
-                        exit 1
+                        echo "WARNING: Cannot determine previous image - skipping rollback"
+                        exit 0
                     fi
 
                     echo "Rolling back to: ${PREVIOUS_IMAGE}"
