@@ -18,4 +18,3 @@ configMapGenerator:
 
 commonLabels:
   region: latam
-  agent-name: zone-latam

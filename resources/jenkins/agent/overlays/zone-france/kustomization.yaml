@@ -18,4 +18,3 @@ configMapGenerator:
 
 commonLabels:
   region: france
-  agent-name: zone-france
