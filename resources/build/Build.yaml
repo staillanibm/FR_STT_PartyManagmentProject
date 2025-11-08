@@ -4,13 +4,26 @@ metadata:
   generateName: cdf-party-management-build-
   namespace: ${OCP_NAMESPACE}
 spec:
-  buildConfigRef:
-    name: cdf-party-management-build
-  strategy:
-    type: Docker
-    dockerStrategy: {}
   source:
     type: Git
     git:
       uri: https://github.com/staillanibm/FR_STT_PartyManagmentProject
       ref: main
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: resources/build/Dockerfile_test
+      pullSecret:
+        name: acr-pull-secret
+      buildArgs:
+      - name: VERSION
+        value: ${FULL_VERSION}
+      - name: WPM_TOKEN
+        value: ${WPM_TOKEN}
+      - name: GIT_TOKEN
+        value: ${GIT_TOKEN}
+  output:
+    to:
+      kind: ImageStreamTag
+      name: cdf-party-management:${FULL_VERSION}
+      namespace: ${OCP_NAMESPACE}

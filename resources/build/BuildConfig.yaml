@@ -13,6 +13,8 @@ spec:
     type: Docker
     dockerStrategy:
       dockerfilePath: resources/build/Dockerfile_test
+      pullSecret:
+        name: acr-pull-secret
       buildArgs:
       - name: VERSION
         value: ${FULL_VERSION}
