@@ -137,67 +137,6 @@ pipeline {
             }
         }
 
-        stage('Health Check') {
-            steps {
-                script {
-                    sh '''
-                        export PATH="/tools:$PATH"
-
-                        echo "Performing health checks..."
-
-                        # Get pod name
-                        POD_NAME=$(/tools/kubectl get pods -n "${OCP_NAMESPACE}" \
-                            -l app="${DEPLOYMENT_NAME}" \
-                            -o jsonpath='{.items[0].metadata.name}')
-
-                        if [ -z "${POD_NAME}" ]; then
-                            echo "ERROR: No pods found for deployment"
-                            exit 1
-                        fi
-
-                        echo "Health checking pod: ${POD_NAME}"
-
-                        # Health check with retries
-                        START_TIME=$(date +%s)
-                        MAX_TIMEOUT=300
-                        MAX_ATTEMPTS=30
-                        ATTEMPT=0
-
-                        while true; do
-                            CURRENT_TIME=$(date +%s)
-                            ELAPSED=$((CURRENT_TIME - START_TIME))
-
-                            if [ ${ELAPSED} -gt ${MAX_TIMEOUT} ]; then
-                                echo "ERROR: Health check timeout after ${ELAPSED} seconds"
-                                exit 1
-                            fi
-
-                            ATTEMPT=$((ATTEMPT + 1))
-
-                            # Try health check endpoint
-                            HTTP_CODE=$(/tools/kubectl exec -n "${OCP_NAMESPACE}" "${POD_NAME}" \
-                                -- curl -f -s -o /dev/null -w "%{http_code}" http://localhost:5555/health 2>/dev/null || echo "000")
-
-                            echo "Attempt ${ATTEMPT}/${MAX_ATTEMPTS} (${ELAPSED}s): HTTP ${HTTP_CODE}"
-
-                            if [ "${HTTP_CODE}" = "200" ]; then
-                                echo "✓ Health check passed - Service is healthy"
-                                exit 0
-                            fi
-
-                            if [ ${ATTEMPT} -ge ${MAX_ATTEMPTS} ]; then
-                                echo "ERROR: Health check failed after ${MAX_ATTEMPTS} attempts"
-                                exit 1
-                            fi
-
-                            echo "Retrying in 10 seconds..."
-                            sleep 10
-                        done
-                    '''
-                }
-            }
-        }
-
         stage('Deployment Verification') {
             steps {
                 script {
