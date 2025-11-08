@@ -82,10 +82,10 @@ services:
   - name: JcPublicTools
     version: "5.0"
 configurationVariables:
-  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.portNumber
-  : "5432"
   ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.serverName
   : postgres
+  ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionSettings.portNumber
+  : "5432"
   ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.heartBeatInterval
   : "0"
   ? artConnection.FR_STT_PartyManagmentProject.project.fr_stt_partymanagment.WmJDBCAdapter.com_wm_adapter_wmjdbc_JDBCAdapter.connections.cdr_party.connectionManagerSettings.poolable
