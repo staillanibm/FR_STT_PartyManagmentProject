@@ -81,7 +81,7 @@ pipeline {
         // OCP ImageStream references
         IMAGE_STREAM_TAG = "${params.IMAGE_STREAM_NAME}:${FULL_VERSION}"
         IMAGE_STREAM_LATEST = "${params.IMAGE_STREAM_NAME}:latest"
-        OCP_IMAGE_REFERENCE = "${params.OCP_REGISTRY}/${params.OCP_NAMESPACE}/${IMAGE_STREAM_TAG}"
+        OCP_IMAGE_REFERENCE = "${params.OCP_REGISTRY}/${OCP_NAMESPACE}/${IMAGE_STREAM_TAG}"
 
         // Docker build tags (temporary, pushed to OCP ImageStream)
         DOCKER_BUILD_TAG = "${params.IMAGE_STREAM_NAME}:${FULL_VERSION}"
@@ -150,15 +150,18 @@ pipeline {
                                 # Push tag to remote using PAT token
                                 # Extract remote URL and rewrite with token
                                 REMOTE_URL=$(git config --get remote.origin.url)
-                                if [[ "${REMOTE_URL}" == https://* ]]; then
-                                    # HTTPS URL: https://github.com/user/repo.git
-                                    REMOTE_WITH_TOKEN=$(echo "${REMOTE_URL}" | sed "s|https://|https://oauth2:${GIT_TOKEN}@|")
-                                    git push "${REMOTE_WITH_TOKEN}" "${FULL_VERSION}"
-                                else
-                                    # SSH URL or other - use token auth
-                                    echo "ERROR: Only HTTPS git URLs are supported for PAT authentication"
-                                    exit 1
-                                fi
+                                case "${REMOTE_URL}" in
+                                    https://*)
+                                        # HTTPS URL: https://github.com/user/repo.git
+                                        REMOTE_WITH_TOKEN=$(echo "${REMOTE_URL}" | sed "s|https://|https://oauth2:${GIT_TOKEN}@|")
+                                        git push "${REMOTE_WITH_TOKEN}" "${FULL_VERSION}"
+                                        ;;
+                                    *)
+                                        # SSH URL or other - use token auth
+                                        echo "ERROR: Only HTTPS git URLs are supported for PAT authentication"
+                                        exit 1
+                                        ;;
+                                esac
                                 echo "✓ Tag ${FULL_VERSION} pushed to remote"
                             fi
                         '''
@@ -193,18 +196,23 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "Building Docker image for OCP ImageStream: ${DOCKER_BUILD_TAG}"
+                    echo "Building Docker image using OCP BuildConfig: ${IMAGE_STREAM_TAG}"
                     sh '''
-                        # Build with ACR base image reference
-                        # Jenkins agent must have credentials for ACR pull or use OCP secret
-                        docker build \
-                            --build-arg VERSION=${FULL_VERSION} \
-                            --build-arg WPM_TOKEN=${WPM_TOKEN} \
-                            --build-arg GIT_TOKEN=${GIT_TOKEN} \
-                            -t "${DOCKER_BUILD_TAG}" \
-                            -t "${DOCKER_BUILD_LATEST}" \
-                            -f "${DOCKERFILE_PATH}" \
-                            "${BUILD_CONTEXT}"
+                        # Use OpenShift BuildConfig to build the image
+                        # This approach doesn't require Docker daemon on the agent
+                        oc new-build --name="${IMAGE_STREAM_NAME}-build" \
+                            --dockerfile="Dockerfile_test" \
+                            --context-dir="resources/build" \
+                            -n "${OCP_NAMESPACE}" \
+                            --to="${IMAGE_STREAM_NAME}:${FULL_VERSION}" \
+                            --strategy=docker \
+                            --build-arg="VERSION=${FULL_VERSION}" \
+                            --build-arg="WPM_TOKEN=${WPM_TOKEN}" \
+                            --build-arg="GIT_TOKEN=${GIT_TOKEN}" \
+                            . || echo "BuildConfig already exists"
+
+                        # Start the build and wait for completion
+                        oc start-build "${IMAGE_STREAM_NAME}-build" -n "${OCP_NAMESPACE}" --from-dir="." --wait
 
                         echo "✓ Docker image built successfully"
                     '''
@@ -215,45 +223,32 @@ pipeline {
         stage('Image Validation') {
             steps {
                 script {
-                    echo "Validating built Docker image..."
+                    echo "Validating built ImageStream image..."
                     sh '''
-                        echo "Image inspection:"
-                        docker inspect "${DOCKER_BUILD_TAG}" | jq '.[0] | {Id, Created, Size, Config}'
+                        echo "ImageStream image inspection:"
+                        oc describe imagestream ${IMAGE_STREAM_NAME} -n ${OCP_NAMESPACE}
                     '''
                 }
             }
         }
 
-        stage('Push to OCP ImageStream') {
-            when {
-                // Only push if credentials are available and branch is main/develop
-                expression {
-                    return env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'develop' || env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'develop'
-                }
-            }
+        stage('Verify Image in ImageStream') {
             steps {
                 script {
-                    echo "Pushing image to OCP ImageStream: ${OCP_IMAGE_REFERENCE}"
+                    echo "Verifying image pushed to OCP ImageStream: ${IMAGE_STREAM_TAG}"
                     sh '''
-                        # Verify ImageStream exists
-                        if ! kubectl get imagestream ${IMAGE_STREAM_NAME} -n ${OCP_NAMESPACE} >/dev/null 2>&1; then
+                        # Verify ImageStream exists and has the new image
+                        if ! oc get imagestream ${IMAGE_STREAM_NAME} -n ${OCP_NAMESPACE} >/dev/null 2>&1; then
                             echo "ERROR: ImageStream ${IMAGE_STREAM_NAME} not found in namespace ${OCP_NAMESPACE}"
                             exit 1
                         fi
                         echo "✓ ImageStream found"
 
-                        # Tag the built image with OCP registry reference
-                        docker tag "${DOCKER_BUILD_TAG}" "${OCP_IMAGE_REFERENCE}"
-                        docker tag "${DOCKER_BUILD_LATEST}" "${params.OCP_REGISTRY}/${params.OCP_NAMESPACE}/${IMAGE_STREAM_LATEST}"
+                        # Tag the image as latest
+                        oc tag "${IMAGE_STREAM_NAME}:${FULL_VERSION}" "${IMAGE_STREAM_NAME}:latest" -n ${OCP_NAMESPACE}
 
-                        echo "Pushing to OCP internal registry..."
-
-                        # Push to OCP ImageStream
-                        docker push "${OCP_IMAGE_REFERENCE}"
-                        docker push "${params.OCP_REGISTRY}/${params.OCP_NAMESPACE}/${IMAGE_STREAM_LATEST}"
-
-                        echo "✓ Image pushed successfully to OCP ImageStream"
-                        echo "ImageStream reference: ${OCP_IMAGE_REFERENCE}"
+                        echo "✓ Image verified in OCP ImageStream"
+                        echo "ImageStream reference: ${IMAGE_STREAM_TAG}"
                     '''
                 }
             }
@@ -283,8 +278,8 @@ pipeline {
             script {
                 echo "Cleaning up temporary resources..."
                 sh '''
-                    # Optionally remove dangling images
-                    docker image prune -f --filter "dangling=true" || true
+                    # Clean up old BuildConfigs (OCP native builds don't need cleanup)
+                    echo "✓ Pipeline cleanup complete"
                 '''
             }
         }

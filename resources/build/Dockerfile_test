@@ -3,6 +3,7 @@ FROM iwhicr.azurecr.io/webmethods-edge-runtime:11.2.3
 # A staged build is required if you want to protect these two secrets. Docker secrets could also be used.
 ARG WPM_TOKEN
 ARG GIT_TOKEN
+ARG VERSION
 
 # Copy packages
 # Once development is finished we build a prebaked image with all the packages: adapters, connectors, custom packages imported in the UI, JDBC drivers.
@@ -17,7 +18,7 @@ RUN wpm install -u staillanibm -p $GIT_TOKEN -r https://github.com/staillanibm -
 RUN /opt/softwareag/IntegrationServer/bin/jcode.sh makeall cdfKafka
 
 # The project package implemented in the UI is also copied in the Edge Runtime
-RUN wpm install -u staillanibm -p $GIT_TOKEN -r https://github.com/staillanibm -d /opt/softwareag/IntegrationServer FR_STT_PartyManagmentProject:1.0.3
+RUN wpm install -u staillanibm -p $GIT_TOKEN -r https://github.com/staillanibm -d /opt/softwareag/IntegrationServer FR_STT_PartyManagmentProject:$VERSION
 
 RUN curl -o /opt/softwareag/IntegrationServer/packages/WmJDBCAdapter/code/jars/postgresql-42.7.4.jar "https://jdbc.postgresql.org/download/postgresql-42.7.4.jar"
 

@@ -15,6 +15,15 @@ spec:
         app: jenkins-agent
     spec:
       serviceAccountName: jenkins-agent
+      initContainers:
+      - name: fix-workspace-perms
+        image: busybox:latest
+        command: ['sh', '-c', 'mkdir -p /tmp/jenkins-agent/workspace && mkdir -p /home/jenkins/agent && chmod 777 /home/jenkins && chmod 777 /home/jenkins/agent || true']
+        volumeMounts:
+        - name: workspace
+          mountPath: /tmp/jenkins-agent
+        - name: home-jenkins
+          mountPath: /home/jenkins
       containers:
       - name: jenkins-agent
         image: jenkins/inbound-agent:latest
@@ -46,24 +55,31 @@ spec:
         # Force English locale (Jenkins)
         - name: JAVA_TOOL_OPTIONS
           value: "-Duser.language=en -Duser.country=US"
-        # Number of executors (use /tmp for OCP compatibility)
+        # Work directory for Jenkins agent (use /tmp for OCP compatibility)
         - name: JENKINS_AGENT_WORKDIR
+          value: "/tmp/jenkins-agent"
+        # Override home directory to use workspace
+        - name: HOME
           value: "/tmp/jenkins-agent"
         ports:
         - containerPort: 50000
           name: agent-port
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "250m"
+            memory: "512Mi"
+            cpu: "500m"
           limits:
-            memory: "1Gi"
-            cpu: "1000m"
+            memory: "2Gi"
+            cpu: "2000m"
         volumeMounts:
         - name: workspace
           mountPath: /tmp/jenkins-agent
+        - name: home-jenkins
+          mountPath: /home/jenkins
       volumes:
       - name: workspace
+        emptyDir: {}
+      - name: home-jenkins
         emptyDir: {}
       nodeSelector:
         kubernetes.io/os: linux
