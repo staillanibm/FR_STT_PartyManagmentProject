@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-agent-config
+data:
+  # These values are overridden in overlays per namespace
+  jenkins-url: "http://jenkins.jenkins.svc.cluster.local:8080"
+  agent-name: "jenkins-agent"

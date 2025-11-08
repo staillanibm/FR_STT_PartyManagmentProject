@@ -1,0 +1,249 @@
+// Jenkins Pipeline for FR_STT_PartyManagementProject CI/CD
+// Declarative Pipeline with parameterized versioning
+
+pipeline {
+    agent any
+
+    parameters {
+        string(
+            name: 'VERSION_BASE',
+            defaultValue: '1.0',
+            description: 'Base version for the build (e.g., 1.0, 2.0)'
+        )
+        string(
+            name: 'OCP_REGISTRY',
+            defaultValue: 'image-registry.openshift-image-registry.svc:5000',
+            description: 'OpenShift internal registry address'
+        )
+        string(
+            name: 'OCP_NAMESPACE',
+            defaultValue: 'fr-stt-party-management',
+            description: 'OpenShift namespace for ImageStream'
+        )
+        string(
+            name: 'IMAGE_STREAM_NAME',
+            defaultValue: 'fr-stt-party-management',
+            description: 'ImageStream name in OpenShift'
+        )
+        string(
+            name: 'ACR_PULL_SECRET',
+            defaultValue: 'acr-pull-secret',
+            description: 'Name of the OCP secret for ACR base image pull'
+        )
+    }
+
+    environment {
+        // Set working directory for all stages
+        WORKSPACE_DIR = "${WORKSPACE}"
+        BUILD_CONTEXT = "${WORKSPACE}/resources/build"
+        DOCKERFILE_PATH = "${WORKSPACE}/resources/build/Dockerfile_test"
+
+        // Version management
+        BUILD_NUMBER_PADDED = sh(script: "printf '%02d' ${BUILD_NUMBER}", returnStdout: true).trim()
+        FULL_VERSION = "${params.VERSION_BASE}.${BUILD_NUMBER_PADDED}"
+
+        // OCP ImageStream references
+        IMAGE_STREAM_TAG = "${params.IMAGE_STREAM_NAME}:${FULL_VERSION}"
+        IMAGE_STREAM_LATEST = "${params.IMAGE_STREAM_NAME}:latest"
+        OCP_IMAGE_REFERENCE = "${params.OCP_REGISTRY}/${params.OCP_NAMESPACE}/${IMAGE_STREAM_TAG}"
+
+        // Docker build tags (temporary, pushed to OCP ImageStream)
+        DOCKER_BUILD_TAG = "${params.IMAGE_STREAM_NAME}:${FULL_VERSION}"
+        DOCKER_BUILD_LATEST = "${params.IMAGE_STREAM_NAME}:latest"
+    }
+
+    options {
+        // Keep last 30 builds
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+        // Timeout for the entire pipeline
+        timeout(time: 2, unit: 'HOURS')
+        // Disable concurrent builds
+        disableConcurrentBuilds()
+        // Add timestamps to logs
+        timestamps()
+    }
+
+    stages {
+        stage('Environment Setup') {
+            steps {
+                script {
+                    echo "=========================================="
+                    echo "Pipeline Configuration"
+                    echo "=========================================="
+                    echo "Base Version: ${params.VERSION_BASE}"
+                    echo "Build Number: ${BUILD_NUMBER}"
+                    echo "Full Version: ${FULL_VERSION}"
+                    echo "OCP Registry: ${params.OCP_REGISTRY}"
+                    echo "OCP Namespace: ${params.OCP_NAMESPACE}"
+                    echo "ImageStream: ${IMAGE_STREAM_TAG}"
+                    echo "OCP Image Reference: ${OCP_IMAGE_REFERENCE}"
+                    echo "Build Context: ${BUILD_CONTEXT}"
+                    echo "Dockerfile: ${DOCKERFILE_PATH}"
+                    echo "ACR Pull Secret: ${params.ACR_PULL_SECRET}"
+                    echo "=========================================="
+                }
+            }
+        }
+
+        stage('SCM Checkout') {
+            steps {
+                script {
+                    echo "Checking out source code..."
+                    checkout scm
+                }
+            }
+        }
+
+        stage('Version Tag') {
+            steps {
+                script {
+                    echo "Creating repository version tag: v${FULL_VERSION}"
+                    sh '''
+                        # Check if tag already exists
+                        if git rev-parse "v${FULL_VERSION}" >/dev/null 2>&1; then
+                            echo "Tag v${FULL_VERSION} already exists. Skipping tag creation."
+                        else
+                            git tag -a "v${FULL_VERSION}" -m "Release version ${FULL_VERSION} - Build #${BUILD_NUMBER}"
+                            # Push tag to remote repository
+                            git push origin "v${FULL_VERSION}" || echo "Failed to push tag (may be due to permissions or remote issue)"
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage('Pre-Build Validation') {
+            steps {
+                script {
+                    echo "Validating build prerequisites..."
+                    sh '''
+                        # Check if Dockerfile exists
+                        if [ ! -f "${DOCKERFILE_PATH}" ]; then
+                            echo "ERROR: Dockerfile not found at ${DOCKERFILE_PATH}"
+                            exit 1
+                        fi
+                        echo "✓ Dockerfile found"
+
+                        # Check Docker daemon
+                        if ! docker ps > /dev/null 2>&1; then
+                            echo "ERROR: Docker daemon not accessible"
+                            exit 1
+                        fi
+                        echo "✓ Docker daemon is accessible"
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building Docker image for OCP ImageStream: ${DOCKER_BUILD_TAG}"
+                    sh '''
+                        # Build with ACR base image reference
+                        # Jenkins agent must have credentials for ACR pull or use OCP secret
+                        docker build \
+                            --build-arg VERSION=${FULL_VERSION} \
+                            --build-arg WPM_TOKEN=${WPM_TOKEN} \
+                            --build-arg GIT_TOKEN=${GIT_TOKEN} \
+                            -t "${DOCKER_BUILD_TAG}" \
+                            -t "${DOCKER_BUILD_LATEST}" \
+                            -f "${DOCKERFILE_PATH}" \
+                            "${BUILD_CONTEXT}"
+
+                        echo "✓ Docker image built successfully"
+                    '''
+                }
+            }
+        }
+
+        stage('Image Validation') {
+            steps {
+                script {
+                    echo "Validating built Docker image..."
+                    sh '''
+                        echo "Image inspection:"
+                        docker inspect "${DOCKER_BUILD_TAG}" | jq '.[0] | {Id, Created, Size, Config}'
+                    '''
+                }
+            }
+        }
+
+        stage('Push to OCP ImageStream') {
+            when {
+                // Only push if credentials are available and branch is main/develop
+                expression {
+                    return env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'develop' || env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'develop'
+                }
+            }
+            steps {
+                script {
+                    echo "Pushing image to OCP ImageStream: ${OCP_IMAGE_REFERENCE}"
+                    sh '''
+                        # Verify ImageStream exists
+                        if ! kubectl get imagestream ${IMAGE_STREAM_NAME} -n ${OCP_NAMESPACE} >/dev/null 2>&1; then
+                            echo "ERROR: ImageStream ${IMAGE_STREAM_NAME} not found in namespace ${OCP_NAMESPACE}"
+                            exit 1
+                        fi
+                        echo "✓ ImageStream found"
+
+                        # Tag the built image with OCP registry reference
+                        docker tag "${DOCKER_BUILD_TAG}" "${OCP_IMAGE_REFERENCE}"
+                        docker tag "${DOCKER_BUILD_LATEST}" "${params.OCP_REGISTRY}/${params.OCP_NAMESPACE}/${IMAGE_STREAM_LATEST}"
+
+                        echo "Pushing to OCP internal registry..."
+
+                        # Push to OCP ImageStream
+                        docker push "${OCP_IMAGE_REFERENCE}"
+                        docker push "${params.OCP_REGISTRY}/${params.OCP_NAMESPACE}/${IMAGE_STREAM_LATEST}"
+
+                        echo "✓ Image pushed successfully to OCP ImageStream"
+                        echo "ImageStream reference: ${OCP_IMAGE_REFERENCE}"
+                    '''
+                }
+            }
+        }
+
+        stage('CI Summary') {
+            steps {
+                script {
+                    echo "=========================================="
+                    echo "CI Pipeline Completed Successfully"
+                    echo "=========================================="
+                    echo "Version: ${FULL_VERSION}"
+                    echo "OCP ImageStream: ${IMAGE_STREAM_TAG}"
+                    echo "ImageStream Reference: ${OCP_IMAGE_REFERENCE}"
+                    echo "Build Duration: ${currentBuild.durationString}"
+                    echo "=========================================="
+                    echo ""
+                    echo "Image is now available in OCP ImageStream"
+                    echo "Next steps: Deploy to OCP using CD pipeline"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                echo "Cleaning up temporary resources..."
+                // Optional: Clean workspace on failure
+                sh '''
+                    # Optionally remove dangling images
+                    docker image prune -f --filter "dangling=true" || true
+                '''
+            }
+        }
+        failure {
+            script {
+                echo "ERROR: CI Pipeline failed"
+                // You can add notifications here (Slack, email, etc.)
+            }
+        }
+        success {
+            script {
+                echo "SUCCESS: CI Pipeline completed"
+            }
+        }
+    }
+}

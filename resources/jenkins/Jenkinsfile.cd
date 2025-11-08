@@ -1,0 +1,310 @@
+// Jenkins Pipeline for CD Phase (Continuous Deployment to OCP)
+// This pipeline deploys the built image to OpenShift Container Platform
+// with health checks and automated rollback on failure
+
+pipeline {
+    agent any
+
+    parameters {
+        string(
+            name: 'IMAGE_STREAM_TAG',
+            defaultValue: 'fr-stt-party-management:latest',
+            description: 'ImageStream tag to deploy (e.g., fr-stt-party-management:1.0.05)'
+        )
+        string(
+            name: 'OCP_NAMESPACE',
+            defaultValue: 'fr-stt-party-management',
+            description: 'OpenShift namespace for deployment'
+        )
+        string(
+            name: 'DEPLOYMENT_NAME',
+            defaultValue: 'fr-stt-party-management',
+            description: 'Name of the Kubernetes deployment resource'
+        )
+        string(
+            name: 'HEALTH_CHECK_URL',
+            defaultValue: 'http://localhost:5555/health',
+            description: 'Health check endpoint URL'
+        )
+        string(
+            name: 'HEALTH_CHECK_TIMEOUT',
+            defaultValue: '300',
+            description: 'Health check timeout in seconds'
+        )
+        string(
+            name: 'OCP_REGISTRY',
+            defaultValue: 'image-registry.openshift-image-registry.svc:5000',
+            description: 'OpenShift internal registry address'
+        )
+    }
+
+    environment {
+        KUBECONFIG = "${WORKSPACE}/.kube/config"
+        // ImageStream reference in OCP
+        IMAGE_REFERENCE = "${params.OCP_REGISTRY}/${params.OCP_NAMESPACE}/${params.IMAGE_STREAM_TAG}"
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        timeout(time: 30, unit: 'MINUTES')
+        timestamps()
+    }
+
+    stages {
+        stage('Environment Setup') {
+            steps {
+                script {
+                    echo "=========================================="
+                    echo "CD Pipeline Configuration"
+                    echo "=========================================="
+                    echo "ImageStream Tag: ${params.IMAGE_STREAM_TAG}"
+                    echo "OCP Registry: ${params.OCP_REGISTRY}"
+                    echo "OCP Namespace: ${params.OCP_NAMESPACE}"
+                    echo "Image Reference: ${IMAGE_REFERENCE}"
+                    echo "Deployment Name: ${params.DEPLOYMENT_NAME}"
+                    echo "Health Check URL: ${params.HEALTH_CHECK_URL}"
+                    echo "=========================================="
+                }
+            }
+        }
+
+        stage('Pre-Deployment Validation') {
+            steps {
+                script {
+                    echo "Validating prerequisites for deployment..."
+                    sh '''
+                        # Check kubeconfig
+                        echo "Checking kubeconfig..."
+                        if [ -z "$KUBECONFIG" ] && [ ! -f ~/.kube/config ]; then
+                            echo "ERROR: No kubeconfig found"
+                            exit 1
+                        fi
+
+                        # Validate kubectl access
+                        echo "Validating kubectl access..."
+                        if ! kubectl cluster-info > /dev/null 2>&1; then
+                            echo "ERROR: Cannot connect to Kubernetes cluster"
+                            exit 1
+                        fi
+
+                        echo "✓ Kubernetes access validated"
+
+                        # Check if namespace exists
+                        if ! kubectl get namespace "${OCP_NAMESPACE}" > /dev/null 2>&1; then
+                            echo "ERROR: Namespace ${OCP_NAMESPACE} does not exist"
+                            exit 1
+                        fi
+
+                        echo "✓ Namespace ${OCP_NAMESPACE} found"
+
+                        # Check if deployment exists
+                        if ! kubectl get deployment "${DEPLOYMENT_NAME}" -n "${OCP_NAMESPACE}" > /dev/null 2>&1; then
+                            echo "ERROR: Deployment ${DEPLOYMENT_NAME} not found in namespace ${OCP_NAMESPACE}"
+                            exit 1
+                        fi
+
+                        echo "✓ Deployment ${DEPLOYMENT_NAME} found"
+                    '''
+                }
+            }
+        }
+
+        stage('Save Current Deployment State') {
+            steps {
+                script {
+                    echo "Saving current deployment state for potential rollback..."
+                    sh '''
+                        # Get current image tag
+                        CURRENT_IMAGE=$(kubectl get deployment "${DEPLOYMENT_NAME}" \
+                            -n "${OCP_NAMESPACE}" \
+                            -o jsonpath='{.spec.template.spec.containers[0].image}')
+
+                        echo "Current Image: ${CURRENT_IMAGE}"
+                        echo "${CURRENT_IMAGE}" > previous_image.txt
+
+                        # Save full deployment spec
+                        kubectl get deployment "${DEPLOYMENT_NAME}" \
+                            -n "${OCP_NAMESPACE}" \
+                            -o yaml > previous_deployment.yaml
+
+                        echo "✓ Deployment state saved"
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to OCP') {
+            steps {
+                script {
+                    echo "Deploying image to OCP from ImageStream..."
+                    sh '''
+                        echo "Setting image for deployment: ${DEPLOYMENT_NAME}"
+                        echo "New image: ${IMAGE_REFERENCE}"
+
+                        # Update the deployment with the ImageStream image
+                        kubectl set image deployment/"${DEPLOYMENT_NAME}" \
+                            "${DEPLOYMENT_NAME}"="${IMAGE_REFERENCE}" \
+                            -n "${OCP_NAMESPACE}" \
+                            --record
+
+                        echo "✓ Image update initiated from ImageStream"
+                    '''
+                }
+            }
+        }
+
+        stage('Wait for Rollout') {
+            steps {
+                script {
+                    echo "Waiting for deployment rollout to complete..."
+                    sh '''
+                        echo "Monitoring rollout progress..."
+
+                        kubectl rollout status deployment/"${DEPLOYMENT_NAME}" \
+                            -n "${OCP_NAMESPACE}" \
+                            --timeout=10m
+
+                        echo "✓ Rollout completed successfully"
+                    '''
+                }
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                script {
+                    echo "Performing health checks on deployed service..."
+                    sh '''
+                        echo "Health check URL: ${HEALTH_CHECK_URL}"
+                        echo "Maximum wait time: ${HEALTH_CHECK_TIMEOUT} seconds"
+
+                        START_TIME=$(date +%s)
+                        ATTEMPTS=0
+                        MAX_ATTEMPTS=30
+
+                        while true; do
+                            CURRENT_TIME=$(date +%s)
+                            ELAPSED=$((CURRENT_TIME - START_TIME))
+
+                            if [ ${ELAPSED} -gt ${HEALTH_CHECK_TIMEOUT} ]; then
+                                echo "ERROR: Health check timeout after ${ELAPSED} seconds"
+                                exit 1
+                            fi
+
+                            ATTEMPTS=$((ATTEMPTS + 1))
+                            echo "Health check attempt ${ATTEMPTS}/${MAX_ATTEMPTS} (elapsed: ${ELAPSED}s)..."
+
+                            if curl -f -s -o /dev/null -w "%{http_code}" "${HEALTH_CHECK_URL}" | grep -q "^200$"; then
+                                echo "✓ Health check passed - Service is healthy"
+                                exit 0
+                            fi
+
+                            if [ ${ATTEMPTS} -ge ${MAX_ATTEMPTS} ]; then
+                                echo "ERROR: Health check failed after ${ATTEMPTS} attempts"
+                                exit 1
+                            fi
+
+                            echo "Health check failed, retrying in 10 seconds..."
+                            sleep 10
+                        done
+                    '''
+                }
+            }
+        }
+
+        stage('Post-Deployment Verification') {
+            steps {
+                script {
+                    echo "Verifying deployment..."
+                    sh '''
+                        echo "Checking deployment status..."
+
+                        # Get pod information
+                        echo ""
+                        echo "Running pods:"
+                        kubectl get pods -n "${OCP_NAMESPACE}" -l app="${DEPLOYMENT_NAME}" -o wide
+
+                        # Check for any restart issues
+                        echo ""
+                        echo "Pod restart count:"
+                        kubectl get pods -n "${OCP_NAMESPACE}" -l app="${DEPLOYMENT_NAME}" \
+                            -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.containerStatuses[0].restartCount}{"\n"}{end}'
+
+                        # Verify image is deployed
+                        echo ""
+                        echo "Deployed image:"
+                        kubectl get deployment "${DEPLOYMENT_NAME}" -n "${OCP_NAMESPACE}" \
+                            -o jsonpath='{.spec.template.spec.containers[0].image}'
+
+                        echo ""
+                        echo "✓ Deployment verification completed"
+                    '''
+                }
+            }
+        }
+
+        stage('CD Summary') {
+            steps {
+                script {
+                    echo "=========================================="
+                    echo "CD Pipeline Completed Successfully"
+                    echo "=========================================="
+                    echo "Image Deployed: ${params.IMAGE_TAG}"
+                    echo "Namespace: ${params.OCP_NAMESPACE}"
+                    echo "Deployment: ${params.DEPLOYMENT_NAME}"
+                    echo "Build Duration: ${currentBuild.durationString}"
+                    echo "=========================================="
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            script {
+                echo "=========================================="
+                echo "DEPLOYMENT FAILED - INITIATING ROLLBACK"
+                echo "=========================================="
+
+                try {
+                    sh '''
+                        echo "Retrieving previous image..."
+                        PREVIOUS_IMAGE=$(cat previous_image.txt)
+
+                        echo "Rolling back to previous image: ${PREVIOUS_IMAGE}"
+
+                        kubectl set image deployment/"${DEPLOYMENT_NAME}" \
+                            "${DEPLOYMENT_NAME}"="${PREVIOUS_IMAGE}" \
+                            -n "${OCP_NAMESPACE}" \
+                            --record
+
+                        echo "Waiting for rollback to complete..."
+                        kubectl rollout status deployment/"${DEPLOYMENT_NAME}" \
+                            -n "${OCP_NAMESPACE}" \
+                            --timeout=10m
+
+                        echo "✓ Rollback completed"
+                        echo ""
+                        echo "Verifying previous version is running..."
+                        kubectl get pods -n "${OCP_NAMESPACE}" -l app="${DEPLOYMENT_NAME}" -o wide
+                    '''
+                } catch (Exception e) {
+                    echo "ERROR: Rollback failed - ${e.message}"
+                    echo "MANUAL INTERVENTION REQUIRED"
+                }
+
+                // Send notification
+                echo "Failure notification: Deployment of ${params.IMAGE_TAG} failed and was rolled back"
+            }
+        }
+
+        always {
+            script {
+                // Clean up temporary files
+                sh '''
+                    rm -f previous_image.txt previous_deployment.yaml
+                '''
+            }
+        }
+    }
+}

@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-agent
+  labels:
+    app: jenkins-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-agent
+  template:
+    metadata:
+      labels:
+        app: jenkins-agent
+    spec:
+      serviceAccountName: jenkins-agent
+      containers:
+      - name: jenkins-agent
+        image: jenkins/inbound-agent:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        # Jenkins controller URL - must be set at deploy time
+        - name: JENKINS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: jenkins-agent-config
+              key: jenkins-url
+        # Agent name - must be set at deploy time
+        - name: JENKINS_AGENT_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: jenkins-agent-config
+              key: agent-name
+        # Secret token for authentication
+        - name: JENKINS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-agent-secret
+              key: token
+        # Force English locale (system level)
+        - name: LANG
+          value: "en_US.UTF-8"
+        - name: LC_ALL
+          value: "en_US.UTF-8"
+        # Force English locale (Jenkins)
+        - name: JAVA_TOOL_OPTIONS
+          value: "-Duser.language=en -Duser.country=US"
+        # Number of executors (use /tmp for OCP compatibility)
+        - name: JENKINS_AGENT_WORKDIR
+          value: "/tmp/jenkins-agent"
+        ports:
+        - containerPort: 50000
+          name: agent-port
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: workspace
+          mountPath: /tmp/jenkins-agent
+      volumes:
+      - name: workspace
+        emptyDir: {}
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: Always
