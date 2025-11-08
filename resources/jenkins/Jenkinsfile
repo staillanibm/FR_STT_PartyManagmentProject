@@ -208,7 +208,7 @@ pipeline {
                     echo "Building image via OCP BuildConfig: ${IMAGE_STREAM_TAG}"
                     withCredentials([
                         string(credentialsId: 'wpm-token', variable: 'WPM_TOKEN'),
-                        string(credentialsId: 'git-token', variable: 'GIT_TOKEN')
+                        string(credentialsId: 'git-credentials', variable: 'GIT_TOKEN')
                     ]) {
                         sh """
                             export PATH="/tools:\$PATH"
