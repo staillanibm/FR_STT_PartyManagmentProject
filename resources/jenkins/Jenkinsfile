@@ -209,11 +209,19 @@ pipeline {
                     sh '''
                         export PATH="/tools:$PATH"
 
-                        # Substitute variables in BuildConfig template
-                        envsubst < resources/build/BuildConfig.yaml | /tools/kubectl apply -f -
+                        # Substitute variables in BuildConfig template using sed
+                        sed -e "s|\${OCP_NAMESPACE}|${OCP_NAMESPACE}|g" \
+                            -e "s|\${FULL_VERSION}|${FULL_VERSION}|g" \
+                            -e "s|\${WPM_TOKEN}|${WPM_TOKEN}|g" \
+                            -e "s|\${GIT_TOKEN}|${GIT_TOKEN}|g" \
+                            resources/build/BuildConfig.yaml | /tools/kubectl apply -f -
 
                         # Trigger the build by creating a Build resource
-                        envsubst < resources/build/Build.yaml | /tools/kubectl create -f -
+                        sed -e "s|\${OCP_NAMESPACE}|${OCP_NAMESPACE}|g" \
+                            -e "s|\${FULL_VERSION}|${FULL_VERSION}|g" \
+                            -e "s|\${WPM_TOKEN}|${WPM_TOKEN}|g" \
+                            -e "s|\${GIT_TOKEN}|${GIT_TOKEN}|g" \
+                            resources/build/Build.yaml | /tools/kubectl create -f -
 
                         echo "✓ Docker image built and pushed to ImageStream"
                     '''
