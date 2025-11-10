@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "gw-group-gw-id"
+  labels:
+    app: "gw-group-gw-id"
+    gatewayGroup: "gw-group"
+    gatewayId: "gw-id"
+  annotations:
+    productChargedContainers: "manager;egw"
+    productID: "46c2d3697ae4406d9157c58de4b66dcc"
+    productMetric: "VIRTUAL_PROCESSOR_CORE"
+    productName: "IBM Event Automation Non-Production"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "gw-group-gw-id"
+      gatewayGroup: "gw-group"
+      gatewayId: "gw-id"
+  template:
+    metadata:
+      labels:
+        app: "gw-group-gw-id"
+        gatewayGroup: "gw-group"
+        gatewayId: "gw-id"
+      annotations:
+        productChargedContainers: "manager;egw"
+        productID: "46c2d3697ae4406d9157c58de4b66dcc"
+        productMetric: "VIRTUAL_PROCESSOR_CORE"
+        productName: "IBM Event Automation Non-Production"
+    spec:
+      containers:
+      - name: egw
+        image: icr.io/cpopen/ibm-eventendpointmanagement/egw@sha256:1dea66d146b3d975abe40050d46ff3a679e60553113766121efb047d853db0b7
+        resources:
+          limits:
+            cpu: 2
+            ephemeral-storage: 800M
+            memory: 2Gi
+          requests:
+            cpu: 1
+            ephemeral-storage: 800M
+            memory: 1Gi
+        ports:
+        - containerPort: 8443
+          name: kafka-client
+        env:
+        - name: backendURL
+          value: "https://eem.eem-manager-ibm-eem-server-events.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com/gateway"
+        - name: GATEWAY_PORT
+          value: "8443"
+        - name: KAFKA_ADVERTISED_LISTENER
+          value: "vb0-events.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com:443,vb1-events.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com:443,vb2-events.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com:443"
+        - name: BACKEND_CA_CERTIFICATES
+          value: "-----BEGIN CERTIFICATE-----\nMIIDbTCCAlWgAwIBAgIRALruYAWD3MeZAJpzfJ/H4AkwDQYJKoZIhvcNAQELBQAw\nUDEmMCQGA1UEChMdSUJNIEV2ZW50IEVuZHBvaW50IE1hbmFnZW1lbnQxJjAkBgNV\nBAMTHUlCTSBFdmVudCBFbmRwb2ludCBNYW5hZ2VtZW50MB4XDTI1MTEwOTEwMjI1\nNVoXDTI2MTEwOTEwMjI1NVowUDEmMCQGA1UEChMdSUJNIEV2ZW50IEVuZHBvaW50\nIE1hbmFnZW1lbnQxJjAkBgNVBAMTHUlCTSBFdmVudCBFbmRwb2ludCBNYW5hZ2Vt\nZW50MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqpGQdwblMPc9eNnp\nhGhUFDr6qpY7SYF9rWuCeOOwC7mJdCg0claXK2X7UNh3RgE9OA+Ai9jCGXuYPijQ\nw815Pa3SZUQ8LOCnfmlSVvnb0jLgynEpRLJIRSsrZRjuJOjwjgaDBacg8VCwlrzS\n/GtmrACKse0zIBME6MulRCJ/VkYnasx23puCDtOomzO3dg1xCsyF8EvYmJVXFMuF\nHN9DT5tIEwXdUIoZiFrDltS4o4MjrkwdszYaE+AQtmyhmTt18H6WD0ugECImxre8\nlN+KpLXos5Hh2ywHpMdf3o8UhqF6joh8WLnRw0WIHaaZT4MLQ92SaXMB5Z+pvvEt\nkpUc6wIDAQABo0IwQDAOBgNVHQ8BAf8EBAMCAqQwDwYDVR0TAQH/BAUwAwEB/zAd\nBgNVHQ4EFgQU31t+htYCx3RRPJrRGNvFXobK1xEwDQYJKoZIhvcNAQELBQADggEB\nABRrO5gwmlHPjWmVCSF4ruh2og6GNrNr3ijWJZF0OOc8pXiOQWCfeXyYXlXdHWg2\nNCh4ZRig1sOtE+Adc+LXzrIMw2Ls4HPWeIOVDqjOL95C38imOoqXI4REOciyc9uW\nEbbocjreN5P8+P9qDNPVEIFCiiXCM2aDnuW4Ywy/MVlLreGJxeJGp4hC4QWTVi80\nRLfwIDF1+ovBwbCylSjIb47fJy16jcx+OH8RDZA4jqlDmPFJFJ31R01TgSwLVr1N\nxQn/2T0CT4AxHcREmPes2GD+D99X+eQs3vNU0mp0OnfNn/2kexYwWQe0Rx8xcV2e\n4D3kPz3S8GWOCL5SuSX1cNY=\n-----END CERTIFICATE-----\n"
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: apiKey
+              name: "gw-group-gw-id"
+        - name: LICENSE_ID
+          value: "L-CYBH-K48BZQ"
+        - name: ACCEPT_LICENSE
+          value: "true"
+        - name: GATEWAY_TRUST_PEM
+          valueFrom:
+            secretKeyRef:
+              key: ca.crt
+              name: "gw-group-gw-id-certs"
+        volumeMounts:
+        - name: certs
+          mountPath: "/certs/client.pem"
+          subPath: "tls.crt"
+          readOnly: true
+        - name: certs
+          mountPath: "/certs/client.key"
+          subPath: "tls.key"
+          readOnly: true
+      volumes:
+      - name: certs 
+        secret: 
+          secretName: "gw-group-gw-id-certs"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: "gw-group-gw-id"
+spec:
+  ports:
+    - name: kafka-client
+      protocol: TCP
+      port: 8443
+      targetPort: kafka-client
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app: "gw-group-gw-id"
+    gatewayGroup: "gw-group"
+    gatewayId: "gw-id"
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: vb0
+spec:
+  to:
+    kind: Service
+    name: gw-group-gw-id
+    weight: 100
+  port:
+    targetPort: kafka-client
+  tls:
+    termination: passthrough
+  wildcardPolicy: None
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: vb1
+spec:
+  to:
+    kind: Service
+    name: gw-group-gw-id
+    weight: 100
+  port:
+    targetPort: kafka-client
+  tls:
+    termination: passthrough
+  wildcardPolicy: None
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: vb2
+spec:
+  to:
+    kind: Service
+    name: gw-group-gw-id
+    weight: 100
+  port:
+    targetPort: kafka-client
+  tls:
+    termination: passthrough
+  wildcardPolicy: None

@@ -10,4 +10,5 @@
 *secret*.yaml
 *secret*.yml
 .DS_Store
-
+*environment.json
+user-credentials.json

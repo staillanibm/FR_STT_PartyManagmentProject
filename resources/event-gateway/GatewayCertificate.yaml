@@ -1,0 +1,24 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: eem-gateway-cert-request
+spec:
+  secretName: gw-group-gw-id-certs
+  privateKey:
+    algorithm: RSA
+  duration: 2160h 
+  renewBefore: 360h 
+  isCA: false
+  usages:
+    - server auth
+  subject:
+    organizations:
+      - cert-manager
+  commonName: stt-egw
+  dnsNames:
+    - vb0-events.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com
+    - vb1-events.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com
+    - vb2-events.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com
+  issuerRef:
+    name: eem-ca-issuer
+    kind: ClusterIssuer

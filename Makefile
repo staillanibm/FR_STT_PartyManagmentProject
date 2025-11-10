@@ -42,7 +42,7 @@ docker-deploy:
 docker-undeploy:
 	./resources/compose/down.sh
 
-docker-undeploy:
+docker-status:
 	./resources/compose/status.sh
 
 docker-logs-edge-dev:

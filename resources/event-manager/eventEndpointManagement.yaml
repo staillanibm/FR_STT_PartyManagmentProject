@@ -1,0 +1,30 @@
+apiVersion: events.ibm.com/v1beta1
+kind: EventEndpointManagement
+metadata:
+  name: eem-manager
+  labels:
+    backup.events.ibm.com/component: eventendpointmanagement
+spec:
+  license:
+    accept: true
+    license: 'L-CYBH-K48BZQ'
+    metric: VIRTUAL_PROCESSOR_CORE
+    use: EventAutomationNonProduction
+  manager:
+    authConfig:
+      authType: LOCAL
+    storage:
+      storageClassName: ocs-storagecluster-cephfs
+      type: persistent-claim
+    template:
+      pod:
+        spec:
+          containers:
+            - name: manager
+              resources:
+                requests:
+                  cpu: '0.25'
+                  memory: 256Mi
+                limits:
+                  cpu: '1'
+                  memory: 1024Mi
