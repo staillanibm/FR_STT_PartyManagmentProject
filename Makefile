@@ -56,7 +56,7 @@ docker-logs-edge-test:
 # ════════════════════════════════════════════════════════════════════════
 
 docker-kafka-certs-gen:
-	./resources/compose/kafka/generate-certs.sh
+	cd ./resources/compose/kafka/secrets && ./generate-certs.sh
 
 docker-kafka-broker-info:
 	$(DOCKER_RUNTIME) exec -it kafka kafka-broker-api-versions \

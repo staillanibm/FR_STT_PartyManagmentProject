@@ -24,6 +24,7 @@ services:
     volumes:
       - ./edge-dev/application.properties:/opt/softwareag/IntegrationServer/application.properties:ro
       - ./kafka/secrets/kafka.truststore.jks:/certs/kafka.truststore.jks:ro
+      - ../event-gateway/eem.truststore.jks:/certs/eem.truststore.jks:ro
     networks:
       - isolated_net
       - default

@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PartyEvent",
+  "description": "Schema for Party events (Created, Updated, Deleted)",
+  "type": "object",
+  "required": ["eventType", "eventDateTime", "event"],
+  "properties": {
+    "eventType": {
+      "type": "string",
+      "enum": ["PartyCreated", "PartyUpdated", "PartyDeleted"],
+      "description": "Type of the party event"
+    },
+    "eventDateTime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date and time when the event occurred"
+    },
+    "event": {
+      "type": "object",
+      "required": ["id", "name", "type", "status", "creationDateTime"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique identifier of the party"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "description": "Name of the party"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["individual", "private", "public"],
+          "description": "Type of the party"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "inactive"],
+          "description": "Status of the party"
+        },
+        "creationDateTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Date and time when the party was created"
+        },
+        "updateDateTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Date and time when the party was last updated"
+        }
+      }
+    }
+  }
+}

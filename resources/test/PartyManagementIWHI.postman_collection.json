@@ -1,0 +1,277 @@
+{
+	"info": {
+		"_postman_id": "4c127e4e-bc22-4e8f-94cf-6405249791d4",
+		"name": "PartyManagementIWHI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32883895"
+	},
+	"item": [
+		{
+			"name": "Create party webhook",
+			"protocolProfileBehavior": {
+				"disableCookies": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "webhook_key",
+						"value": "{{webhookKey}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Stéphane\",\n    \"type\": \"individual\",\n    \"status\": \"active\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{webhookUrl}}",
+					"host": [
+						"{{webhookUrl}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create party API",
+			"protocolProfileBehavior": {
+				"disableCookies": true
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "scope",
+							"value": "Party",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "d7eb9c29ddfc41bf80d26b862111a63f",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "119759b55cf74ca6a5b81ffbe0f5e69b",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://dev6056135.a-fra-c1.int.ipaas.automation.ibm.com/integration/rest/oAuth/getToken",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "tokenName",
+							"value": "token",
+							"type": "string"
+						},
+						{
+							"key": "useBrowser",
+							"value": true,
+							"type": "boolean"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Stephane10\",\n    \"type\": \"individual\",\n    \"status\": \"active\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://dev6056135.a-fra-c1.int.ipaas.automation.ibm.com/integration/restv2/development/flce147696295ec8a146c516/Party/parties",
+					"protocol": "https",
+					"host": [
+						"dev6056135",
+						"a-fra-c1",
+						"int",
+						"ipaas",
+						"automation",
+						"ibm",
+						"com"
+					],
+					"path": [
+						"integration",
+						"restv2",
+						"development",
+						"flce147696295ec8a146c516",
+						"Party",
+						"parties"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create party APIGW",
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{
+							"key": "value",
+							"value": "{{apiGatewayApiKey}}",
+							"type": "string"
+						},
+						{
+							"key": "key",
+							"value": "X-Gateway-ApiKey",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "webhook_key",
+						"value": "65f9848fe48121a1412196761762361721652",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Stephane10\",\n    \"type\": \"individual\",\n    \"status\": \"active\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{apiGatewayUrl}}/parties",
+					"host": [
+						"{{apiGatewayUrl}}"
+					],
+					"path": [
+						"parties"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "scope",
+				"value": "{{scope}}",
+				"type": "string"
+			},
+			{
+				"key": "clientSecret",
+				"value": "{{clientSecret}}",
+				"type": "string"
+			},
+			{
+				"key": "clientId",
+				"value": "{{clientId}}",
+				"type": "string"
+			},
+			{
+				"key": "accessTokenUrl",
+				"value": "{{tokenUrl}}",
+				"type": "string"
+			},
+			{
+				"key": "grant_type",
+				"value": "client_credentials",
+				"type": "string"
+			},
+			{
+				"key": "refreshRequestParams",
+				"value": [],
+				"type": "any"
+			},
+			{
+				"key": "tokenRequestParams",
+				"value": [],
+				"type": "any"
+			},
+			{
+				"key": "authRequestParams",
+				"value": [],
+				"type": "any"
+			},
+			{
+				"key": "challengeAlgorithm",
+				"value": "S256",
+				"type": "string"
+			},
+			{
+				"key": "useBrowser",
+				"value": true,
+				"type": "boolean"
+			},
+			{
+				"key": "state",
+				"value": "12345",
+				"type": "string"
+			},
+			{
+				"key": "authUrl",
+				"value": "https://keycloak.staging.e-auth.cloud/realms/sttlab/protocol/openid-connect/auth",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			},
+			{
+				"key": "client_authentication",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
