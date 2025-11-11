@@ -12,3 +12,10 @@
 .DS_Store
 *environment.json
 user-credentials.json
+resources/compose/kafka/secrets/ca-cert
+resources/compose/kafka/secrets/ca-key
+.gitignore
+resources/compose/kafka/secrets/key_creds
+resources/compose/kafka/secrets/keystore_creds
+resources/compose/kafka/secrets/san.cnf
+resources/compose/kafka/secrets/truststore_creds

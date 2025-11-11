@@ -1,0 +1,12 @@
+{
+    "eventType": "PartyCreated",
+    "eventDateTime": "2025-11-06T10:53:45.373Z",
+    "event": {
+        "id": "c60943c5-68a7-40eb-9efc-8249aad98541",
+        "name": "Jill Lewis",
+        "type": "abc",
+        "status": "def",
+        "creationDateTime": "2025-11-06T10:53:45.373Z",
+        "updateDateTime": "2025-11-06T10:53:45.373Z"
+    }
+}
