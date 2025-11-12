@@ -1,3 +1,3 @@
 source ./setenv.sh
 
-docker compose ps
+podman compose ps

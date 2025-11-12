@@ -1,15 +1,15 @@
 services:
-  edge-test:
-    image: default-route-openshift-image-registry.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com/default/cdf-party-management:1.0.3
+  edge-france:
+    image: cdf-party-management:1.0.3
     platform: linux/amd64
-    container_name: edge-test
+    container_name: edge-france
     ports:
       - "25555:5555"
     env_file:
-      - ./edge-test/.env_party_ert
+      - ./edge-france/.env_party_ert
     environment:
       SAG_IS_CONFIG_PROPERTIES: "/opt/softwareag/IntegrationServer/application.properties"
-      SAG_IS_CLOUD_ALLOW_SYNC: true
+      SAG_IS_CLOUD_ALLOW_SYNC: false
       WM_HTTPS_PROXY_ALIAS: default  
       WM_HTTPS_PROXY_HOST: squid 
       WM_HTTPS_PROXY_PORT: 3128
@@ -22,7 +22,7 @@ services:
         -Dhttp.nonProxyHosts="localhost|127.0.0.1|edge|sqlserver|10.*|172.*|192.168.*"
         -Dhttps.nonProxyHosts="localhost|127.0.0.1|edge|sqlserver|10.*|172.*|192.168.*"
     volumes:
-      - ./edge-test/application.properties:/opt/softwareag/IntegrationServer/application.properties:ro
+      - ./edge-france/application.properties:/opt/softwareag/IntegrationServer/application.properties:ro
       - ./kafka/secrets/kafka.truststore.jks:/certs/kafka.truststore.jks:ro
     networks:
       - isolated_net

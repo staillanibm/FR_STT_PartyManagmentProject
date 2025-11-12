@@ -1,4 +1,4 @@
-DOCKER_RUNTIME=docker
+DOCKER_RUNTIME=podman
 OCP_REGISTRY=default-route-openshift-image-registry.apps.68f62d11926501b4673f4b0b.am1.techzone.ibm.com
 OCP_NAMESPACE ?= default
 ERT_IMAGE_NAME=cdf-edge-runtime
@@ -27,6 +27,7 @@ docker-build-dev:
 
 docker-build-test:
 	@$(DOCKER_RUNTIME) build -t $(OCP_REGISTRY)/$(OCP_NAMESPACE)/$(PARTY_IMAGE_NAME):$(PARTY_IMAGE_TAG) --platform=linux/amd64 --build-arg WPM_TOKEN=${WPM_TOKEN} --build-arg GIT_TOKEN=${GIT_TOKEN} -f ./resources/build/Dockerfile_test .
+	@$(DOCKER_RUNTIME) tag $(OCP_REGISTRY)/$(OCP_NAMESPACE)/$(PARTY_IMAGE_NAME):$(PARTY_IMAGE_TAG) $(PARTY_IMAGE_NAME):$(PARTY_IMAGE_TAG)
 
 docker-push-ocp:
 	$(DOCKER_RUNTIME) push $(OCP_REGISTRY)/$(OCP_OCP_NAMESPACE)/$(PARTY_IMAGE_NAME):$(PARTY_IMAGE_TAG)
